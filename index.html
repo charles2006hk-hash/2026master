@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026 丙午馬年運程旗艦版</title>
+    <meta name="description" content="2026馬年運程大師 AI 預測系統 - 麥玲玲生肖運程、八字日柱詳批、每日通勝、風水佈局">
+    
+    <!-- React & Tailwind -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #fdf2f2;
+            color: #4a0e0e;
+        }
+        .serif { font-family: 'Noto Serif TC', serif; }
+        .bg-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239b2c2c' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // ==========================================
+        // 核心資料庫 (整合自 PDF 檔案)
+        // ==========================================
+
+        const ZODIACS = ['鼠', '牛', '虎', '兔', '龍', '蛇', '馬', '羊', '猴', '雞', '狗', '豬'];
+        
+        // 1. 生肖運程資料 (File 1)
+        const ZODIAC_DETAILS = {
+            '馬': { type: '本命年/刑太歲', stars: ['將星','歲駕'], bad: ['太歲','劍鋒','伏屍','三刑'], desc: '本命年加自刑，運勢波瀾重重，情緒起伏大，易鑽牛角尖。事業有將星帶動，權力提升，但需防小人。健康受劍鋒影響，易有血光，建議捐血洗牙化解。', wealth: '財運起伏大，宜守不宜攻。「歲駕」入主，開支多與汽車有關。', career: '權力地位提升，利武職（警隊、消防）。但人際關係疲弱。', love: '感情關口年，不結即分。已婚者易爭執，宜聚少離多。', health: '需特別注意金屬受傷，駕駛者務必留神。' },
+            '鼠': { type: '沖太歲', stars: ['天解'], bad: ['歲破','大耗','災煞'], desc: '子午相沖，變化最大。宜動不宜靜，適合轉職、搬遷。大耗星入主，恐有大破財，宜買實物保值。感情易生變，宜聚少離多。', wealth: '大耗星主破財，投資宜極度保守，切勿投機。', career: '工作環境多變，奔波勞碌。適合主動出差化解相沖。', love: '感情極不穩定，易有分離危機。', health: '水火相沖，留意心臟、血管及眼部疾病。' },
+            '牛': { type: '害太歲', stars: ['紫微','龍德','玉堂'], bad: ['暴敗','天厄'], desc: '丑午相害，人際關係受損，易遭陷害。幸有強力吉星紫微龍德，逢凶化吉。財運起伏大，暴敗星主橫發橫破，見好即收。', wealth: '正財運尚可，但「暴敗」星代表財運起落急劇。', career: '貴人扶持，雖有小人作祟，但最終能獲得認可。', love: '感情平穩中帶波折，伴侶間易因誤會而冷戰。', health: '注意腸胃及皮膚敏感問題。' },
+            '兔': { type: '破太歲', stars: ['天德','福星'], bad: ['咸池','卷舌'], desc: '卯午相破，人際與家宅運受損。咸池爛桃花入主，已婚者需防三角關係。事業得天德貴人助，有發展，但需防口舌。', wealth: '財運平平，易有意外開支。', career: '「天德」貴人相助，但「卷舌」是非口舌極多。', love: '爛桃花氾濫，已婚者必須定力足夠。', health: '注意肝膽及手腳受傷。' },
+            '虎': { type: '三合', stars: ['三台','華蓋'], bad: ['官符','五鬼'], desc: '寅午戌三合，運勢上揚。三台星利步步高升。華蓋利才華發揮，但較孤獨。官符入主需防合約糾紛。', wealth: '財運穩健，正財為主。適合長線投資。', career: '事業發展理想，利於升職考試。', love: '「華蓋」不利桃花，單身者享受獨處。', health: '「五鬼」易致疑神疑鬼，需注意精神健康。' },
+            '龍': { type: '平穩', stars: ['八座'], bad: ['天狗','吊客'], desc: '運勢平穩。八座利地位提升。天狗吊客不利遠行，外遊需注意安全。無大沖大合，屬中等運勢。', wealth: '正財收入穩定，偏財較弱。', career: '事業按部就班，勝在穩定。', love: '感情生活平淡，需多參與社交活動。', health: '外遊需特別注意安全，防意外受傷。' },
+            '蛇': { type: '平穩/桃花', stars: ['太陽','天喜'], bad: ['孤辰'], desc: '天喜桃花入主，喜事重重。太陽照耀，利男性貴人，適合往外發展。孤辰入主，內心偶感孤獨。', wealth: '財運不俗，常有意外之財。', career: '人際關係大改善，利銷售、公關。', love: '桃花運強勁，利於嫁娶、添丁。', health: '「孤辰」入主，易感孤獨，注意心理健康。' },
+            '羊': { type: '合太歲', stars: ['太陽','天空'], bad: ['晦氣','黃幡'], desc: '午未相合，人緣極佳。天空星主創意，利設計業。太陽利男貴人。晦氣星入主，溝通易生誤會，需多忍讓。', wealth: '財源滾滾，利拓展海外市場。', career: '事業順遂，獲上司提拔。', love: '桃花運不俗，單身女士有望結識條件優越異性。', health: '應酬頻繁需注意腸胃。' },
+            '猴': { type: '平穩', stars: ['驛馬','文昌'], bad: ['喪門'], desc: '驛馬星動，宜動中生財，利出差旅遊。文昌星利進修考試。喪門入主，需多關心長輩健康，避探病問喪。', wealth: '動中生財，越忙越有錢。', career: '利於出差、外派或轉職。', love: '異地戀機會大，或與伴侶聚少離多。', health: '「喪門」入主，需多關心長輩健康。' },
+            '雞': { type: '紅鸞桃花', stars: ['紅鸞','太陰'], bad: ['貫索'], desc: '紅鸞星動，大旺姻緣，單身必脫單。太陰女性貴人助。貫索主金錢糾紛，合作需謹慎。', wealth: '財運不俗，但需防因異性破財。', career: '獲女性上司或客戶賞識，事業發展順利。', love: '桃花運極強，單身者必有良緣。', health: '身心康泰，心情愉快。' },
+            '狗': { type: '三合', stars: ['國印'], bad: ['官符'], desc: '三合之年，運勢向好。國印掌權，利升職。官符入主，需防官非，守法為上。', wealth: '正財強勁，多勞多得。', career: '事業運強勁，升職加薪有望。', love: '專注事業，感情較淡。', health: '精神壓力大，易失眠。' },
+            '豬': { type: '平穩', stars: ['月德'], bad: ['小耗'], desc: '月德貴人照耀，逢凶化吉。小耗主輕微破財，理財宜保守。整體運勢循序漸進。', wealth: '「小耗」入主，易有輕微破財。', career: '工作順利，遇困難有貴人解圍。', love: '感情平穩，無大起伏。', health: '身體無大礙，注意飲食均衡。' }
+        };
+
+        // 2. 犯太歲化解錦囊 (File 1)
+        const TAI_SUI_SOLUTIONS = {
+            '馬': { method: '佩戴羊形飾物', desc: '本命年加刑太歲，情緒與健康受衝擊。宜貼身佩戴羊形飾物（午未六合）化解。年初宜捐血、洗牙。' },
+            '鼠': { method: '佩戴猴、龍形飾物', desc: '沖太歲變化最大。宜佩戴猴或龍形飾物（申子辰三合）穩定運勢。主動應驗變化，如搬遷、結婚。' },
+            '牛': { method: '佩戴蛇、雞形飾物', desc: '害太歲主人事不和。宜佩戴蛇或雞形飾物（巳酉丑三合）增強貴人運。少說話多做事。' },
+            '兔': { method: '佩戴狗形飾物', desc: '破太歲主破壞。宜佩戴狗形飾物（卯戌六合）合住太歲。小心處理合約文件。' },
+        };
+
+        // 3. 通勝吉日數據 (File 3)
+        const GOOD_DAYS = {
+            '嫁娶': [
+                { date: '2月22日', lunar: '正月初六', element: '雞', type: '吉' },
+                { date: '2月25日', lunar: '正月初九', element: '鼠', type: '吉' },
+                { date: '2月26日', lunar: '正月初十', element: '牛', type: '吉' },
+                { date: '3月10日', lunar: '正月廿二', element: '牛', type: '吉' },
+                { date: '3月11日', lunar: '正月廿三', element: '虎', type: '吉' },
+                { date: '3月13日', lunar: '正月廿五', element: '龍', type: '吉' },
+            ],
+            '開市': [
+                { date: '2月18日', lunar: '正月初二', element: '蛇', type: '開年' },
+                { date: '2月21日', lunar: '正月初五', element: '猴', type: '首選' },
+                { date: '2月22日', lunar: '正月初六', element: '雞', type: '次選' },
+                { date: '2月25日', lunar: '正月初九', element: '鼠', type: '吉' },
+                { date: '2月26日', lunar: '正月初十', element: '牛', type: '吉' },
+            ]
+        };
+
+        // 4. 九宮飛星風水 (File 3)
+        const FENG_SHUI = [
+            { pos: '東南', star: '九紫 (喜慶/財星)', color: 'bg-purple-100', text: '本年最強吉位！九紫屬火，主喜慶、結婚、添丁、財運。宜放置紅色地氈、紅色中國結或長明燈催旺。', icon: 'fa-fire' },
+            { pos: '正南', star: '五黃 (災星)', color: 'bg-yellow-100', text: '大凶位！五黃主災禍、疾病。切忌動土、裝修。宜放置銅鈴、銅錢或重型銅器化解。忌見紅黃兩色。', icon: 'fa-exclamation-triangle' },
+            { pos: '正北', star: '六白 (偏財/驛馬)', color: 'bg-blue-50', text: '利武職、變動、偏財。宜放置金色飾物、貔貅或流動性物品催旺。', icon: 'fa-horse' },
+            { pos: '西南', star: '七赤 (破軍)', color: 'bg-red-50', text: '主破財、官非、盜賊。宜用藍色物品或一杯水化解肅殺之氣。', icon: 'fa-shield-alt' },
+            { pos: '正東', star: '八白 (正財)', color: 'bg-yellow-50', text: '財星飛臨，雖已退氣但仍吉。宜放黃色、紅色物品或陶瓷催財。', icon: 'fa-coins' },
+            { pos: '中宮', star: '一白 (桃花)', color: 'bg-pink-50', text: '人緣桃花位。利人際關係、戀愛。宜放水種植物或粉紅水晶。', icon: 'fa-heart' },
+            { pos: '正西', star: '三碧 (是非)', color: 'bg-green-50', text: '主口舌是非、爭執。忌綠色、植物。宜用紅色物品（如紅地氈、紅燈）化解。', icon: 'fa-comments' },
+            { pos: '東北', star: '四綠 (文昌)', color: 'bg-green-100', text: '利讀書、考試、文職。宜放四支富貴竹或文昌塔催旺。', icon: 'fa-book' },
+            { pos: '西北', star: '二黑 (病星)', color: 'bg-gray-100', text: '小凶位，主疾病。避忌動土。宜掛銅錢或放銅葫蘆化病氣。', icon: 'fa-medkit' },
+        ];
+
+        // 5. 日柱流月推算引擎
+        const generateMonthlyFortune = (dayStem, dayBranch, month) => {
+            const months = [
+                { name: '正月(庚寅)', element: '木', branch: '寅' }, { name: '二月(辛卯)', element: '木', branch: '卯' },
+                { name: '三月(壬辰)', element: '土', branch: '辰' }, { name: '四月(癸巳)', element: '火', branch: '巳' },
+                { name: '五月(甲午)', element: '火', branch: '午' }, { name: '六月(乙未)', element: '土', branch: '未' },
+                { name: '七月(丙申)', element: '金', branch: '申' }, { name: '八月(丁酉)', element: '金', branch: '酉' },
+                { name: '九月(戊戌)', element: '土', branch: '戌' }, { name: '十月(己亥)', element: '水', branch: '亥' },
+                { name: '十一月(庚子)', element: '水', branch: '子' }, { name: '十二月(辛丑)', element: '土', branch: '丑' }
+            ];
+            
+            const m = months[month - 1];
+            let advice = "";
+            let luck = "平";
+            
+            const stemElement = ['甲','乙'].includes(dayStem) ? '木' : ['丙','丁'].includes(dayStem) ? '火' : ['戊','己'].includes(dayStem) ? '土' : ['庚','辛'].includes(dayStem) ? '金' : '水';
+            
+            if (stemElement === m.element) {
+                advice = "比劫重重，競爭激烈，宜守不宜攻，注意理財。";
+                luck = "中";
+            } else if ((stemElement === '木' && m.element === '土') || (stemElement === '火' && m.element === '金') || (stemElement === '土' && m.element === '水') || (stemElement === '金' && m.element === '木') || (stemElement === '水' && m.element === '火')) {
+                advice = "財星高照，投資有利，工作表現佳，但需防勞累。";
+                luck = "吉";
+            } else if ((stemElement === '木' && m.element === '火') || (stemElement === '火' && m.element === '土') || (stemElement === '土' && m.element === '金') || (stemElement === '金' && m.element === '水') || (stemElement === '水' && m.element === '木')) {
+                advice = "食傷洩秀，才華發揮，創意無限，但易惹是非口舌。";
+                luck = "中吉";
+            } else if ((stemElement === '木' && m.element === '水') || (stemElement === '火' && m.element === '木') || (stemElement === '土' && m.element === '火') || (stemElement === '金' && m.element === '土') || (stemElement === '水' && m.element === '金')) {
+                advice = "印星相生，貴人扶持，利於進修考試，長輩緣佳。";
+                luck = "吉";
+            } else {
+                advice = "官殺攻身，壓力較大，工作責任重，需注意健康與休息。";
+                luck = "平";
+            }
+
+            // 特殊沖合
+            if ((dayBranch === '子' && m.branch === '午') || (dayBranch === '午' && m.branch === '子')) { advice += " 本月沖日腳，感情易變，宜忍讓。"; luck = "凶"; }
+            if ((dayBranch === '丑' && m.branch === '未') || (dayBranch === '未' && m.branch === '丑')) { advice += " 丑未相沖，家宅不安，注意腸胃。"; luck = "凶"; }
+            
+            return { title: m.name, content: advice, type: luck };
+        };
+
+        const generateDayPillarDetail = (stem, branch) => {
+            let title = `【${stem}${branch}日】`;
+            let content = "";
+
+            if (['甲', '乙'].includes(stem)) {
+                content += `日元屬木（${stem}），生於丙午火旺之年。木生火為「食傷」，代表才華發揮、思想活躍、勞碌奔波。\n【事業】今年思維敏捷，創意無限，利於設計、策劃或以口才生財的行業。但「食傷」洩氣重，工作量大增，易感疲憊。\n【財運】憑技術或才華賺錢，多勞多得。但開支亦大，難以聚財。`;
+            } else if (['丙', '丁'].includes(stem)) {
+                content += `日元屬火（${stem}），遇丙午火年，為「比劫」重重。火勢過旺，競爭激烈，財來財去。\n【事業】職場競爭大，易有同事排擠或搶功勞。宜保持低調，不宜強出頭。若從事團隊工作則較有利。\n【財運】「劫財」之年，易破財。不宜借貸擔保，投資宜保守。這一年花費在朋友社交上的錢會增加。`;
+            } else if (['戊', '己'].includes(stem)) {
+                content += `日元屬土（${stem}），得流年火生，為「印星」當旺。貴人運強，利學習、進修。\n【事業】獲長輩或上司提攜，地位提升。利於考試、升職。工作雖忙碌但有回報。\n【財運】正財平穩，長線投資有利。可能有買賣房產或裝修之喜。`;
+            } else if (['庚', '辛'].includes(stem)) {
+                content += `日元屬金（${stem}），受流年火剋，為「官殺」攻身。壓力倍增，但也是權力提升的機會。\n【事業】工作責任加重，上司要求高。只要能承受壓力，必有升遷之機。庚金日主較為辛苦，辛金日主反受其鍛鍊。\n【財運】正財運尚可，但偏財較弱。壓力大，易因健康而破財。`;
+            } else if (['壬', '癸'].includes(stem)) {
+                content += `日元屬水（${stem}），剋流年火，為「財星」高照。今年是財運亨通之年。\n【事業】業績突出，能為公司創造價值。男命桃花運旺，易得異性之助。\n【財運】財源滾滾，投資獲利機會高。但水火相剋，過程起伏較大，需見好即收。`;
+            }
+
+            return { title, content };
+        };
+
+        const getPillars = (year, month, day, hour) => {
+            const HEAVENLY_STEMS = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
+            const EARTHLY_BRANCHES = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+            
+            const date = new Date(year, month - 1, day);
+            const anchorDate = new Date(1900, 0, 31); // 甲辰日
+            const offset = Math.floor((date - anchorDate) / 86400000);
+            const dayIndex = (40 + offset) % 60;
+            
+            const dayStem = HEAVENLY_STEMS[dayIndex % 10];
+            const dayBranch = EARTHLY_BRANCHES[dayIndex % 12];
+            const zodiacIndex = (year - 4) % 12;
+            
+            return {
+                zodiac: ZODIACS[zodiacIndex < 0 ? zodiacIndex + 12 : zodiacIndex],
+                dayPillar: dayStem + dayBranch,
+                dayStem,
+                dayBranch
+            };
+        };
+
+        // ==========================================
+        // UI 組件
+        // ==========================================
+
+        const MasterSelection = ({ onSelect }) => (
+            <div className="min-h-screen flex items-center justify-center bg-red-900 bg-pattern p-4">
+                <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-4xl w-full text-center border-4 border-yellow-500">
+                    <h1 className="text-4xl md:text-5xl font-bold text-red-800 mb-2 serif">2026 丙午馬年</h1>
+                    <p className="text-xl text-gray-600 mb-10">運程大師 AI 預測系統</p>
+                    
+                    <div className="grid md:grid-cols-2 gap-8">
+                        <div 
+                            onClick={() => onSelect('mai')}
+                            className="group relative bg-red-50 hover:bg-red-100 border-2 border-red-200 hover:border-red-600 rounded-2xl p-6 cursor-pointer transition-all transform hover:-translate-y-2"
+                        >
+                            <div className="absolute -top-4 -right-4 bg-yellow-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow">推薦</div>
+                            <div className="w-24 h-24 mx-auto bg-gray-200 rounded-full mb-4 overflow-hidden border-2 border-red-500 flex items-center justify-center text-4xl text-gray-400">
+                                <i className="fas fa-user-tie"></i>
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-800 mb-2">麥玲玲</h3>
+                            <p className="text-sm text-gray-600 mb-4">香港著名玄學家<br/>精準生肖、日柱詳批</p>
+                            <ul className="text-left text-sm text-gray-500 space-y-1 bg-white p-3 rounded-lg">
+                                <li><i className="fas fa-check text-green-500 mr-2"></i>十二生肖全解</li>
+                                <li><i className="fas fa-check text-green-500 mr-2"></i>六十日柱詳批</li>
+                                <li><i className="fas fa-check text-green-500 mr-2"></i>犯太歲錦囊</li>
+                            </ul>
+                        </div>
+
+                        <div className="group relative bg-gray-50 border-2 border-gray-200 rounded-2xl p-6 cursor-not-allowed opacity-70">
+                            <div className="absolute -top-4 -right-4 bg-gray-400 text-white px-4 py-1 rounded-full text-sm font-bold shadow">即將推出</div>
+                            <div className="w-24 h-24 mx-auto bg-gray-200 rounded-full mb-4 flex items-center justify-center text-3xl text-gray-400">
+                                <i className="fas fa-user-secret"></i>
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-500 mb-2">神祕大師</h3>
+                            <p className="text-sm text-gray-500 mb-4">?? 居士<br/>獨家流年風水佈局</p>
+                            <ul className="text-left text-sm text-gray-400 space-y-1 bg-white p-3 rounded-lg">
+                                <li><i className="fas fa-lock mr-2"></i>奇門遁甲</li>
+                                <li><i className="fas fa-lock mr-2"></i>九宮飛星</li>
+                                <li><i className="fas fa-lock mr-2"></i>大六壬神算</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const UserInput = ({ onCalculate, onBack }) => {
+            const [data, setData] = useState({ name: '', gender: 'M', year: 1990, month: 1, day: 1, hour: 12 });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                onCalculate(data);
+            };
+
+            return (
+                <div className="min-h-screen bg-red-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+                        <div className="bg-red-800 p-4 flex items-center">
+                            <button onClick={onBack} className="text-white hover:text-yellow-400"><i className="fas fa-chevron-left"></i></button>
+                            <h2 className="text-white text-lg font-bold ml-4">輸入八字資料</h2>
+                        </div>
+                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-gray-700 text-sm font-bold mb-2">姓名</label>
+                                <input required type="text" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 outline-none" value={data.name} onChange={e => setData({...data, name: e.target.value})} />
+                            </div>
+                            <div>
+                                <label className="block text-gray-700 text-sm font-bold mb-2">性別</label>
+                                <div className="flex gap-2">
+                                    <button type="button" onClick={() => setData({...data, gender: 'M'})} className={`flex-1 py-2 rounded-lg border ${data.gender === 'M' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-gray-200'}`}>男</button>
+                                    <button type="button" onClick={() => setData({...data, gender: 'F'})} className={`flex-1 py-2 rounded-lg border ${data.gender === 'F' ? 'bg-pink-50 border-pink-500 text-pink-700' : 'border-gray-200'}`}>女</button>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label className="text-xs text-gray-500">西曆年</label>
+                                    <input type="number" className="w-full p-2 border rounded" value={data.year} onChange={e => setData({...data, year: e.target.value})} />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-gray-500">月</label>
+                                    <input type="number" max="12" min="1" className="w-full p-2 border rounded" value={data.month} onChange={e => setData({...data, month: e.target.value})} />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-gray-500">日</label>
+                                    <input type="number" max="31" min="1" className="w-full p-2 border rounded" value={data.day} onChange={e => setData({...data, day: e.target.value})} />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-500">出生時辰</label>
+                                <select className="w-full p-2 border rounded bg-white" value={data.hour} onChange={e => setData({...data, hour: e.target.value})}>
+                                    {[...Array(24).keys()].map(h => <option key={h} value={h}>{h}:00 - {h}:59</option>)}
+                                </select>
+                            </div>
+                            <button type="submit" className="w-full bg-red-700 text-white font-bold py-3 rounded-lg hover:bg-red-800 transition shadow-lg flex justify-center items-center gap-2">
+                                開始批算 <i className="fas fa-arrow-right"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        };
+
+        const ResultDashboard = ({ data, onBack }) => {
+            const [tab, setTab] = useState('zodiac');
+            const { zodiac, dayPillar, dayStem, dayBranch } = useMemo(() => getPillars(data.year, data.month, data.day, data.hour), [data]);
+            const zodiacInfo = ZODIAC_DETAILS[zodiac];
+            const dayFortune = generateDayPillarDetail(dayStem, dayBranch);
+            const isFanTaiSui = ['馬', '鼠', '牛', '兔'].includes(zodiac);
+
+            const dayPillarMonthly = useMemo(() => {
+                return Array.from({length: 12}, (_, i) => generateMonthlyFortune(dayStem, dayBranch, i + 1));
+            }, [dayStem, dayBranch]);
+
+            return (
+                <div className="min-h-screen bg-gray-50 pb-20 font-sans">
+                    <div className="bg-red-800 text-white p-4 sticky top-0 z-50 shadow-md flex justify-between items-center">
+                        <div className="flex items-center">
+                            <button onClick={onBack} className="mr-3"><i className="fas fa-chevron-left"></i></button>
+                            <h1 className="font-bold text-lg">{data.name} 的 2026 運程</h1>
+                        </div>
+                        <div className="text-xs bg-red-900 px-2 py-1 rounded">
+                            {data.year}年 • {zodiac} • {dayPillar}日
+                        </div>
+                    </div>
+
+                    <div className="bg-white shadow-sm flex overflow-x-auto whitespace-nowrap">
+                        {[
+                            {id: 'zodiac', label: '生肖運程', icon: 'fa-dragon'},
+                            {id: 'pillar', label: '日柱詳批', icon: 'fa-scroll'},
+                            {id: 'taisui', label: '化解犯太歲', icon: 'fa-shield-alt', alert: isFanTaiSui},
+                            {id: 'calendar', label: '每日通勝', icon: 'fa-calendar-alt'},
+                            {id: 'fengshui', label: '風水佈局', icon: 'fa-compass'}
+                        ].map(t => (
+                            <button 
+                                key={t.id}
+                                onClick={() => setTab(t.id)}
+                                className={`flex-1 py-3 px-4 text-center border-b-2 transition-colors flex items-center justify-center gap-2 ${tab === t.id ? 'border-red-600 text-red-800 bg-red-50' : 'border-transparent text-gray-500'}`}
+                            >
+                                <i className={`fas ${t.icon} ${t.alert ? 'text-red-500 animate-pulse' : ''}`}></i>
+                                {t.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="p-4 max-w-4xl mx-auto">
+                        
+                        {tab === 'zodiac' && (
+                            <div className="space-y-4 fade-in">
+                                <div className="bg-white rounded-xl shadow p-6 border-l-4 border-red-600">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <div>
+                                            <h2 className="text-3xl font-bold text-red-800 serif">{zodiac}</h2>
+                                            <span className="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded mt-1">{zodiacInfo.type}</span>
+                                        </div>
+                                        <div className="text-5xl opacity-10 text-red-800"><i className="fas fa-dragon"></i></div>
+                                    </div>
+                                    <p className="text-gray-700 leading-relaxed text-justify">{zodiacInfo.desc}</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-green-50 p-4 rounded-xl shadow-sm">
+                                        <h3 className="text-green-800 font-bold mb-2 flex items-center"><i className="fas fa-thumbs-up mr-2"></i> 吉星高照</h3>
+                                        <ul className="list-disc pl-4 text-sm text-green-700">
+                                            {zodiacInfo.stars.map(s => <li key={s}>{s}</li>)}
+                                        </ul>
+                                    </div>
+                                    <div className="bg-gray-100 p-4 rounded-xl shadow-sm">
+                                        <h3 className="text-gray-700 font-bold mb-2 flex items-center"><i className="fas fa-exclamation-triangle mr-2"></i> 凶星潛伏</h3>
+                                        <ul className="list-disc pl-4 text-sm text-gray-600">
+                                            {zodiacInfo.bad.map(s => <li key={s}>{s}</li>)}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div className="bg-white rounded-xl shadow p-4">
+                                   <h3 className="font-bold text-gray-800 mb-3 border-b pb-2">詳細運勢</h3>
+                                   <div className="space-y-3">
+                                      <div><span className="font-bold text-yellow-600 block"><i className="fas fa-coins mr-1"></i>財運</span><p className="text-sm text-gray-600">{zodiacInfo.wealth}</p></div>
+                                      <div><span className="font-bold text-blue-600 block"><i className="fas fa-briefcase mr-1"></i>事業</span><p className="text-sm text-gray-600">{zodiacInfo.career}</p></div>
+                                      <div><span className="font-bold text-pink-600 block"><i className="fas fa-heart mr-1"></i>感情</span><p className="text-sm text-gray-600">{zodiacInfo.love}</p></div>
+                                      <div><span className="font-bold text-green-600 block"><i className="fas fa-leaf mr-1"></i>健康</span><p className="text-sm text-gray-600">{zodiacInfo.health}</p></div>
+                                   </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {tab === 'pillar' && (
+                            <div className="space-y-4 fade-in">
+                                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl shadow p-6 text-center">
+                                    <div className="text-sm text-gray-500 mb-1">您的出生日柱</div>
+                                    <div className="text-4xl font-bold text-yellow-800 serif mb-2">{dayPillar}</div>
+                                    <p className="text-xs text-gray-600">日柱代表「自己」及「配偶宮」，流年準確度高於生肖。</p>
+                                </div>
+                                <div className="bg-white rounded-xl shadow p-6">
+                                    <h3 className="text-xl font-bold text-red-800 mb-3">整體運程分析</h3>
+                                    <div className="text-gray-700 whitespace-pre-line leading-relaxed text-justify">
+                                        {dayFortune.content}
+                                    </div>
+                                </div>
+                                <div className="bg-white rounded-xl shadow overflow-hidden">
+                                    <div className="bg-gray-50 px-4 py-2 border-b font-bold text-gray-700">
+                                        <i className="fas fa-list-ol mr-2"></i>2026 丙午年 每月運勢詳解
+                                    </div>
+                                    <div className="divide-y divide-gray-100">
+                                        {dayPillarMonthly.map((m, idx) => (
+                                            <div key={idx} className="p-4 hover:bg-gray-50 transition">
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`rounded-lg px-2 py-1 text-xs font-bold whitespace-nowrap mt-1 ${m.type === '吉' ? 'bg-green-100 text-green-800' : m.type === '凶' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
+                                                        {m.title}
+                                                    </div>
+                                                    <p className="text-sm text-gray-700 leading-relaxed text-justify">{m.content}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {tab === 'taisui' && (
+                            <div className="space-y-4 fade-in">
+                                {isFanTaiSui ? (
+                                    <div className="bg-red-50 border border-red-200 rounded-xl p-6 shadow-sm">
+                                        <h3 className="text-xl font-bold text-red-800 mb-4 flex items-center">
+                                            <i className="fas fa-shield-alt mr-2"></i>
+                                            您今年 {ZODIAC_DETAILS[zodiac].type}
+                                        </h3>
+                                        <div className="bg-white p-4 rounded-lg border border-red-100 mb-4">
+                                            <h4 className="font-bold text-gray-800 mb-2">化解錦囊：</h4>
+                                            <p className="text-gray-700 leading-relaxed">{TAI_SUI_SOLUTIONS[zodiac].desc}</p>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="bg-white p-3 rounded text-center shadow-sm">
+                                                <div className="text-xs text-gray-500">首選化解飾物</div>
+                                                <div className="font-bold text-red-600 text-lg mt-1">{TAI_SUI_SOLUTIONS[zodiac].method.replace('佩戴', '')}</div>
+                                            </div>
+                                            <div className="bg-white p-3 rounded text-center shadow-sm">
+                                                <div className="text-xs text-gray-500">其他方法</div>
+                                                <div className="font-bold text-gray-700 text-sm mt-2">拜太歲、捐血、洗牙</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-green-50 border border-green-200 rounded-xl p-8 text-center shadow-sm">
+                                        <div className="text-5xl text-green-500 mb-4"><i className="fas fa-check-circle"></i></div>
+                                        <h3 className="text-xl font-bold text-green-800 mb-2">恭喜！您今年不犯太歲</h3>
+                                        <p className="text-gray-600">您的生肖運勢相對平穩，可參考其他生肖親友的化解方法。</p>
+                                    </div>
+                                )}
+                                
+                                <div className="bg-white rounded-xl shadow p-4">
+                                    <h4 className="font-bold text-gray-700 mb-3 border-b pb-2">2026 犯太歲生肖一覽</h4>
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {Object.entries(TAI_SUI_SOLUTIONS).map(([z, info]) => (
+                                            <div key={z} className="flex items-center gap-2 text-sm p-3 bg-gray-50 rounded border border-gray-100">
+                                                <span className="bg-red-200 text-red-800 px-3 py-1 rounded-full text-xs font-bold">{z}</span>
+                                                <span className="text-gray-600 flex-1">{info.method}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {tab === 'calendar' && (
+                            <div className="space-y-4 fade-in">
+                                <div className="bg-yellow-50 p-4 rounded-xl text-yellow-800 text-sm mb-4">
+                                    <i className="fas fa-info-circle mr-2"></i>
+                                    每日通勝：以下為2026年農曆正月之吉日精選。
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="bg-white rounded-lg shadow-sm border border-pink-100 overflow-hidden">
+                                        <div className="bg-pink-600 text-white px-4 py-2 font-bold flex justify-between items-center">
+                                            <span className="flex items-center"><i className="fas fa-heart mr-2"></i>嫁娶吉日</span>
+                                        </div>
+                                        <div className="p-4 flex flex-wrap gap-2">
+                                            {GOOD_DAYS['嫁娶'].map((day, idx) => (
+                                                <span key={idx} className="bg-pink-50 text-pink-700 px-3 py-1 rounded-full text-sm font-medium border border-pink-200 flex flex-col items-center">
+                                                    <span>{day.date}</span>
+                                                    <span className="text-xs opacity-75">{day.lunar}</span>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="bg-white rounded-lg shadow-sm border border-red-100 overflow-hidden">
+                                        <div className="bg-red-600 text-white px-4 py-2 font-bold flex justify-between items-center">
+                                            <span className="flex items-center"><i className="fas fa-briefcase mr-2"></i>開市吉日</span>
+                                        </div>
+                                        <div className="p-4 flex flex-wrap gap-2">
+                                            {GOOD_DAYS['開市'].map((day, idx) => (
+                                                <span key={idx} className="bg-red-50 text-red-700 px-3 py-1 rounded-full text-sm font-medium border border-red-200 flex flex-col items-center">
+                                                    <span>{day.date}</span>
+                                                    <span className="text-xs opacity-75">{day.lunar}</span>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {tab === 'fengshui' && (
+                            <div className="space-y-6 fade-in">
+                                <div className="grid grid-cols-3 gap-1 bg-white rounded-xl shadow p-2">
+                                    {/* 九宮格佈局 */}
+                                    {['東南', '南', '西南', '東', '中宮', '西', '東北', '北', '西北'].map((dir, idx) => {
+                                        const sector = FENG_SHUI.find(s => s.pos === (dir.includes('中') ? '中宮' : (dir.includes('南') && dir.length===1 ? '正南' : (dir.includes('北') && dir.length===1 ? '正北' : (dir.includes('東') && dir.length===1 ? '正東' : (dir.includes('西') && dir.length===1 ? '正西' : dir))))));
+                                        return (
+                                            <div key={idx} className={`aspect-square ${sector.color} flex flex-col items-center justify-center text-center p-1 border border-white relative group`}>
+                                                <span className="text-[10px] absolute top-1 left-1 opacity-50">{dir}</span>
+                                                <div className="mb-1"><i className={`fas ${sector.icon} opacity-60`}></i></div>
+                                                <span className="font-bold text-sm leading-tight">{sector.star.split(' ')[0]}</span>
+                                                <span className="text-[10px] opacity-75">{sector.star.split(' ')[1]?.replace('(', '').replace(')', '')}</span>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                                
+                                <div className="bg-white rounded-xl shadow p-4">
+                                    <h4 className="font-bold text-gray-800 mb-2">重點佈局建議：</h4>
+                                    <ul className="space-y-2 text-sm text-gray-600">
+                                        <li className="flex items-start"><i className="fas fa-map-marker-alt text-red-500 mt-1 mr-2"></i><span><strong>催財運 (東南)：</strong>九紫當旺，宜放紅色地氈或長明燈。</span></li>
+                                        <li className="flex items-start"><i className="fas fa-map-marker-alt text-pink-500 mt-1 mr-2"></i><span><strong>催桃花 (中宮)：</strong>一白入中，宜放水種植物或粉晶。</span></li>
+                                        <li className="flex items-start"><i className="fas fa-map-marker-alt text-gray-500 mt-1 mr-2"></i><span><strong>化災煞 (正南)：</strong>五黃大煞，忌動土，宜掛銅鈴化解。</span></li>
+                                        <li className="flex items-start"><i className="fas fa-map-marker-alt text-green-500 mt-1 mr-2"></i><span><strong>旺學業 (東北)：</strong>四綠文昌，宜放四支富貴竹。</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        )}
+
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [master, setMaster] = useState(null);
+            const [userData, setUserData] = useState(null);
+
+            if (!master) {
+                return <MasterSelection onSelect={setMaster} />;
+            }
+
+            if (!userData) {
+                return <UserInput onCalculate={setUserData} onBack={() => setMaster(null)} />;
+            }
+
+            return <ResultDashboard data={userData} onBack={() => setUserData(null)} />;
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
