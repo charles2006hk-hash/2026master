@@ -2,570 +2,937 @@
 <html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 丙午馬年 - 麥玲玲運程尊爵詳解版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 麥玲玲運程書 - 智能瀏覽器</title>
     
-    <!-- React 核心 -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
-    <!-- 樣式與圖標 -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
-        
-        body {
-            font-family: 'Noto Sans TC', sans-serif;
-            background-color: #f5f5f4;
-            color: #292524;
-        }
-        .serif { font-family: 'Noto Serif TC', serif; }
-        
-        /* 書本紙張紋理 */
-        .paper-texture {
-            background-color: #fff;
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d6d3d1' fill-opacity='0.1'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z'/%3E%3C/g%3E%3C/svg%3E");
-        }
-        
-        .fade-in { animation: fadeIn 0.4s ease-out; }
-        .slide-up { animation: slideUp 0.4s ease-out; }
-        
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #fdfbf7; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        canvas { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); background-color: white; }
 
-        /* 列印樣式 (A4 優化) */
+        /* 列印樣式核心邏輯 */
         @media print {
-            @page { size: A4; margin: 15mm; }
-            body { background: white; color: black; font-size: 11pt; font-family: 'Noto Serif TC', serif; }
-            .no-print, .sticky, .fixed, .shadow-lg, .bg-red-800, .bg-stone-900, button { display: none !important; }
-            .print-only { display: block !important; }
+            @page { size: A4; margin: 10mm; }
             
-            /* 強制背景圖形打印 */
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            
-            /* 隱藏彈窗背景遮罩，直接顯示內容 */
-            .modal-overlay { position: static !important; background: none !important; padding: 0 !important; }
-            .modal-content { 
-                box-shadow: none !important; 
-                border: none !important; 
-                max-width: 100% !important; 
-                max-height: none !important; 
+            /* 重置高度與溢位，允許內容流動 */
+            html, body, #root, .app-container {
+                height: auto !important;
+                min-height: 0 !important;
                 overflow: visible !important;
-                margin: 0 !important;
-                background: white !important;
+                overflow-y: visible !important;
             }
-            
-            /* 報表表頭 */
-            .print-header {
-                display: block;
-                text-align: center;
-                border-bottom: 2px solid #000;
-                margin-bottom: 20px;
-                padding-bottom: 10px;
-            }
-            
-            /* 如果彈窗打開，隱藏主內容，只印彈窗 */
-            .has-modal .main-content { display: none !important; }
-            .has-modal .modal-content { display: block !important; }
 
-            /* 確保文字不被截斷 */
-            .prose { max-width: 100% !important; text-align: justify; }
+            /* 隱藏所有內容 */
+            body * {
+                visibility: hidden;
+            }
+
+            /* 只顯示報告模態框及其子元素 */
+            #report-modal, #report-modal * {
+                visibility: visible;
+            }
+
+            /* 將模態框定位到頁面頂部 */
+            #report-modal {
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                z-index: 9999 !important;
+                display: block !important;
+                overflow: visible !important;
+            }
             
-            /* 隱藏滾動條 */
-            ::-webkit-scrollbar { display: none; }
+            .report-container { 
+                box-shadow: none !important; 
+                max-width: none !important; 
+                width: 100% !important;
+                position: static !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
             
-            /* 網格調整 */
-            .grid { display: block !important; }
-            .grid > div { margin-bottom: 20px; page-break-inside: avoid; border: 1px solid #ddd; padding: 10px; }
+            .no-print { display: none !important; }
+            .print-content { padding: 0 !important; }
+            
+            /* --- 關鍵修復：分頁控制 --- */
+            
+            /* 每一個預覽項目容器 */
+            .page-preview-item { 
+                page-break-inside: avoid; 
+                break-inside: avoid;
+                display: block;
+                margin-bottom: 0 !important; 
+                padding-bottom: 0 !important;
+                height: auto;
+                /* 確保每個項目不會超過一頁 */
+                max-height: 275mm; 
+                overflow: hidden;
+            }
+            
+            /* 只在項目之間分頁，最後一個項目後不分頁 */
+            .page-preview-item:not(:last-child) {
+                page-break-after: always;
+                break-after: page;
+            }
+
+            /* 顯示標題，讓列印版更清晰 */
+            .page-preview-title {
+                display: flex !important;
+                visibility: visible !important;
+                font-size: 12pt;
+                color: #333;
+                border-bottom: 1px solid #ccc;
+                margin-bottom: 5px;
+                padding-bottom: 2px;
+            }
+
+            /* 限制 Canvas 高度，預留標題空間，防止溢出導致空白頁 */
+            .page-preview-item canvas {
+                width: auto !important;
+                max-width: 100% !important;
+                max-height: 250mm !important; /* A4高度約297mm，扣除邊距和標題 */
+                display: block;
+                margin: 0 auto;
+                object-fit: contain;
+            }
+            
+            section, tr, .no-overflow-check { 
+                page-break-inside: avoid; 
+            }
+            
+            .break-after-avoid { page-break-after: avoid; }
+            .print-break { page-break-after: always; display: block !important; height: 1px; }
         }
-        
-        .print-header { display: none; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useRef, useCallback } = React;
+        const { createRoot } = ReactDOM;
 
-        // ==========================================
-        // 1. 資料庫與演算法
-        // ==========================================
-
-        const ZODIACS = ['鼠', '牛', '虎', '兔', '龍', '蛇', '馬', '羊', '猴', '雞', '狗', '豬'];
-        
-        // 八字基礎資料
-        const HEAVENLY_STEMS = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
-        const EARTHLY_BRANCHES = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
-        
-        // 五鼠遁日上起時 (重要：用於計算時柱)
-        const getHourStem = (dayStemIndex, hourIndex) => {
-            // 甲己還加甲, 乙庚丙作初...
-            const startStem = (dayStemIndex % 5) * 2; 
-            return HEAVENLY_STEMS[(startStem + hourIndex) % 10];
+        // --- 內置圖標組件 ---
+        const ICONS = {
+            'user': <g><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></g>,
+            'alert-triangle': <g><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></g>,
+            'book-open': <g><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></g>,
+            'star': <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>,
+            'compass': <g><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></g>,
+            'file-text': <g><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></g>,
+            'help-circle': <g><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></g>,
+            'search': <g><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></g>,
+            'chevron-right': <polyline points="9 18 15 12 9 6"/>,
+            'chevron-left': <polyline points="15 18 9 12 15 6"/>,
+            'upload-cloud': <g><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></g>,
+            'eye': <g><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></g>,
+            'plus': <g><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></g>,
+            'minus': <line x1="5" y1="12" x2="19" y2="12"/>,
+            'alert-circle': <g><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></g>,
+            'printer': <g><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></g>,
+            'x': <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
+            'layers': <g><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></g>
         };
 
-        // 萬年曆核心算法
-        const getPillars = (year, month, day, hour) => {
-            const date = new Date(year, month - 1, day);
-            const anchorDate = new Date(1900, 0, 31); // 1900-01-31 是甲辰日
-            const offset = Math.floor((date - anchorDate) / 86400000);
-            
-            // 年柱 (簡易推算，Web展示用)
-            const yearIndex = (year - 4) % 60;
-            const yearStem = HEAVENLY_STEMS[yearIndex % 10];
-            const yearBranch = EARTHLY_BRANCHES[yearIndex % 12];
-            const zodiacIndex = yearIndex % 12;
-
-            // 日柱
-            const dayIndex = (40 + offset) % 60;
-            const dayStem = HEAVENLY_STEMS[dayIndex % 10];
-            const dayBranch = EARTHLY_BRANCHES[dayIndex % 12];
-            
-            // 時柱
-            // hour 是 0-23
-            let hourBranchIdx = Math.floor((hour + 1) / 2) % 12; // 子時跨日
-            const hourStem = getHourStem(dayIndex % 10, hourBranchIdx);
-            const hourBranch = EARTHLY_BRANCHES[hourBranchIdx];
-
-            return {
-                zodiac: ZODIACS[zodiacIndex < 0 ? zodiacIndex + 12 : zodiacIndex],
-                yearPillar: yearStem + yearBranch,
-                dayPillar: dayStem + dayBranch,
-                hourPillar: hourStem + hourBranch,
-                dayStem,
-                dayBranch
-            };
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const content = ICONS[name] || ICONS['alert-circle'];
+            return (
+                <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width={size} 
+                    height={size} 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className={className}
+                >
+                    {content}
+                </svg>
+            );
         };
 
-        // 生肖詳細內容生成器
-        const generateZodiacContent = (zodiac) => {
-            const base = {
-                '馬': { type: '本命年/刑太歲', stars: ['將星','歲駕'], bad: ['太歲','劍鋒','伏屍'], desc: '丙午年為本命年，且午午自刑。運勢起伏大，情緒易低落。' },
-                '鼠': { type: '沖太歲', stars: ['天解'], bad: ['歲破','大耗'], desc: '子午相沖，變化最大。宜動不宜靜，主動求變可化解衝擊。' },
-                '牛': { type: '害太歲', stars: ['紫微','龍德'], bad: ['暴敗'], desc: '丑午相害，人際關係受損。幸有大吉星拱照，逢凶化吉。' },
-                '兔': { type: '破太歲', stars: ['天德'], bad: ['咸池'], desc: '卯午相破，注意家宅安寧。爛桃花入主，需防感情糾紛。' },
-                '虎': { type: '三合', stars: ['三台'], bad: ['官符'], desc: '寅午戌三合，運勢上揚。事業有突破，利升職加薪。' },
-                '龍': { type: '平穩', stars: ['八座'], bad: ['天狗'], desc: '運勢平穩，無沖無合。八座利地位提升，心境開朗。' },
-                '蛇': { type: '桃花', stars: ['天喜'], bad: ['孤辰'], desc: '桃花旺盛，喜事重重。利嫁娶添丁。' },
-                '羊': { type: '合太歲', stars: ['太陽'], bad: ['晦氣'], desc: '午未相合，貴人運強。太陽照耀，利往外發展。' },
-                '猴': { type: '平穩', stars: ['驛馬'], bad: ['喪門'], desc: '驛馬星動，動中生財。需多關心長輩健康。' },
-                '雞': { type: '紅鸞', stars: ['紅鸞','太陰'], bad: ['貫索'], desc: '紅鸞星動，姻緣大好。女性貴人助力強。' },
-                '狗': { type: '三合', stars: ['國印'], bad: ['官符'], desc: '三合之年，權力提升。小心文件合約細節。' },
-                '豬': { type: '平穩', stars: ['月德'], bad: ['小耗'], desc: '貴人扶持，循序漸進。小耗主輕微破財。' }
-            }[zodiac];
-
-            const details = {
-                wealth: `【財運詳解】\n${zodiac}人今年財運${base.type.includes('太歲') ? '較為波動' : '穩步上揚'}。${base.stars.includes('歲駕') ? '因歲駕入主，開支多與汽車、交通有關。' : ''}${base.bad.includes('大耗') ? '受大耗星影響，恐有大額破財，建議購買實物保值。' : '正財收入穩定，但偏財較弱，不宜投機。'}`,
-                career: `【事業詳解】\n${base.stars.includes('將星') ? '將星帶動，權力地位提升，利於管理層或武職人員。' : '事業發展按部就班。'}${base.type.includes('沖') ? '沖太歲之年，工作環境多變，奔波勞碌，適合主動爭取出差。' : '工作表現備受認同。'}`,
-                love: `【感情詳解】\n${base.stars.includes('紅鸞') || base.stars.includes('天喜') ? '桃花運極強，單身者脫單在望，情侶宜拉埋天窗。' : '感情運勢平淡。'}${base.type.includes('本命年') ? '本命年為關口年，不結即分，夫妻間易有爭執。' : ''}`,
-                health: `【健康詳解】\n${base.bad.includes('劍鋒') ? '受劍鋒星影響，易有金屬受傷，駕駛者務必留神。建議農曆年後捐血洗牙化解。' : '健康運勢尚可，注意飲食均衡。'}`
-            };
-
-            return { ...base, details };
+        // --- 數據設定 ---
+        const ZODIAC_DATA = {
+            "馬": { page: 42, monthly: 49, wealth: 44, health: 45, years: {1930:46, 1942:46, 1954:46, 1966:47, 1978:47, 1990:48, 2002:48, 2014:48} },
+            "羊": { page: 52, monthly: 59, wealth: 54, health: 55, years: {1931:56, 1943:56, 1955:56, 1967:57, 1979:57, 1991:58, 2003:58, 2015:58} },
+            "猴": { page: 62, monthly: 69, wealth: 64, health: 65, years: {1932:66, 1944:66, 1956:66, 1968:67, 1980:67, 1992:67, 2004:68, 2016:68} },
+            "雞": { page: 72, monthly: 79, wealth: 74, health: 75, years: {1933:76, 1945:76, 1957:76, 1969:77, 1981:77, 1993:77, 2005:78, 2017:78} },
+            "狗": { page: 82, monthly: 89, wealth: 84, health: 85, years: {1934:86, 1946:86, 1958:86, 1970:87, 1982:87, 1994:88, 2006:88, 2018:88} },
+            "豬": { page: 92, monthly: 99, wealth: 94, health: 95, years: {1935:96, 1947:96, 1959:96, 1971:97, 1983:97, 1995:97, 2007:97, 2019:97} },
+            "鼠": { page: 100, monthly: 109, wealth: 104, health: 105, years: {1936:106, 1948:106, 1960:106, 1972:107, 1984:107, 1996:108, 2008:108, 2020:108} },
+            "牛": { page: 112, monthly: 119, wealth: 114, health: 115, years: {1937:116, 1949:116, 1961:116, 1973:117, 1985:117, 1997:118, 2009:118, 2021:118} },
+            "虎": { page: 122, monthly: 129, wealth: 124, health: 125, years: {1938:126, 1950:126, 1962:126, 1974:127, 1986:127, 1998:128, 2010:128, 2022:128} },
+            "兔": { page: 132, monthly: 139, wealth: 134, health: 135, years: {1939:136, 1951:136, 1963:136, 1975:137, 1987:137, 1999:138, 2011:138, 2023:138} },
+            "龍": { page: 142, monthly: 149, wealth: 144, health: 145, years: {1940:146, 1952:146, 1964:146, 1976:147, 1988:147, 2000:148, 2012:148, 2024:148} },
+            "蛇": { page: 150, monthly: 159, wealth: 154, health: 155, years: {1941:156, 1953:156, 1965:156, 1977:156, 1989:157, 2001:158, 2013:158, 2025:158} }
         };
 
-        // 日柱詳解生成器
-        const generateDayPillarDetail = (dayPillar) => {
-            const stem = dayPillar.charAt(0);
-            const branch = dayPillar.charAt(1);
-            let content = "";
-            
-            // 天干分析 (日元)
-            if (['甲','乙'].includes(stem)) content += "【天干分析】\n日元屬木，生於丙午火旺之年。木生火為「食傷」洩氣。今年思維敏捷，創意無限，但工作量大增，易感疲憊。宜從事策劃、設計等用腦工作。\n";
-            else if (['丙','丁'].includes(stem)) content += "【天干分析】\n日元屬火，遇丙午火年，為「比劫」重重。競爭激烈，財來財去。職場易有小人爭功，宜保持低調。不宜進行大額借貸或擔保。\n";
-            else if (['戊','己'].includes(stem)) content += "【天干分析】\n日元屬土，得流年火生，為「印星」當旺。貴人運強，利學習、進修，獲長輩提攜。有置業或裝修之喜。\n";
-            else if (['庚','辛'].includes(stem)) content += "【天干分析】\n日元屬金，受流年火剋，為「官殺」攻身。壓力倍增，但也是權力提升的機會，多勞多得。需注意呼吸系統健康。\n";
-            else if (['壬','癸'].includes(stem)) content += "【天干分析】\n日元屬水，剋流年火，為「財星」高照。今年是財運亨通之年，但水火相剋，過程起伏較大。男命桃花較旺。\n";
-
-            // 地支分析 (夫妻宮)
-            if (branch === '子') content += "\n【夫妻宮分析】\n日支「子」與流年「午」相沖。感情變化最大，即所謂「沖夫妻宮」。有伴侶者易爭執、分離，建議聚少離多。";
-            else if (branch === '午') content += "\n【夫妻宮分析】\n日支「午」與流年「午」自刑。情緒易低落，對伴侶不滿，容易鑽牛角尖。需多溝通。";
-            else if (branch === '丑') content += "\n【夫妻宮分析】\n日支「丑」與流年「午」相害。感情易受外人挑撥，或因長輩問題而生嫌隙。";
-            else content += "\n【夫妻宮分析】\n夫妻宮相對平穩，感情生活維持現狀。";
-
-            return content;
+        // 簡體到繁體生肖映射
+        const ZODIAC_MAP = {
+            '马': '馬', '鸡': '雞', '猪': '豬', '龙': '龍',
+            '馬': '馬', '羊': '羊', '猴': '猴', '雞': '雞', '狗': '狗', '豬': '豬',
+            '鼠': '鼠', '牛': '牛', '虎': '虎', '兔': '兔', '龍': '龍', '蛇': '蛇'
         };
 
-        // 八字流月推算引擎
-        const BAZI_ENGINE = {
-            getPageNumber: (dayPillar) => {
-                const stems = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
-                const branches = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
-                const stemIdx = stems.indexOf(dayPillar[0]);
-                const branchIdx = branches.indexOf(dayPillar[1]);
-                const offset = (stemIdx * 12 + branchIdx) * 3; 
-                return 166 + offset;
-            },
-
-            generateMonthlyFortune: (dayStem, dayBranch, month) => {
-                const months = [
-                    { name: '正月(庚寅)', element: '木', branch: '寅' }, { name: '二月(辛卯)', element: '木', branch: '卯' },
-                    { name: '三月(壬辰)', element: '土', branch: '辰' }, { name: '四月(癸巳)', element: '火', branch: '巳' },
-                    { name: '五月(甲午)', element: '火', branch: '午' }, { name: '六月(乙未)', element: '土', branch: '未' },
-                    { name: '七月(丙申)', element: '金', branch: '申' }, { name: '八月(丁酉)', element: '金', branch: '酉' },
-                    { name: '九月(戊戌)', element: '土', branch: '戌' }, { name: '十月(己亥)', element: '水', branch: '亥' },
-                    { name: '十一月(庚子)', element: '水', branch: '子' }, { name: '十二月(辛丑)', element: '土', branch: '丑' }
-                ];
-                
-                const m = months[month - 1];
-                let advice = "";
-                let luck = "平";
-                
-                const stemElement = ['甲','乙'].includes(dayStem) ? '木' : ['丙','丁'].includes(dayStem) ? '火' : ['戊','己'].includes(dayStem) ? '土' : ['庚','辛'].includes(dayStem) ? '金' : '水';
-                
-                if (stemElement === m.element) {
-                    advice = "比劫重重，競爭激烈，本月宜守不宜攻，注意理財，避免借貸。";
-                    luck = "中";
-                } else if ((stemElement === '木' && m.element === '土') || (stemElement === '火' && m.element === '金') || (stemElement === '土' && m.element === '水') || (stemElement === '金' && m.element === '木') || (stemElement === '水' && m.element === '火')) {
-                    advice = "財星高照，投資有利，工作表現佳，但需防勞累，多勞多得。";
-                    luck = "吉";
-                } else {
-                    advice = "官殺攻身，壓力較大，工作責任重，小人較多，需注意健康與休息。";
-                    luck = "平";
-                }
-
-                if ((dayBranch === '子' && m.branch === '午') || (dayBranch === '午' && m.branch === '子')) { advice += " 本月沖日腳，感情易變，宜忍讓。"; luck = "凶"; }
-                
-                return { title: m.name, content: advice, type: luck };
-            }
+        const FAN_TAI_SUI_RULES = {
+            "馬": { type: "本命年 + 刑太歲", page: 20, desc: "運勢波動，宜貼身佩戴羊形飾物。" },
+            "鼠": { type: "沖太歲", page: 20, desc: "變化最大，感情關口，宜動不宜靜。" },
+            "兔": { type: "破太歲", page: 21, desc: "人際破壞，破壞固有關係，慎言。" },
+            "牛": { type: "害太歲", page: 21, desc: "小人作祟，陷害之意，保持低調。" }
         };
 
-        // 萬年曆通勝引擎
-        const CALENDAR_ENGINE = {
-            stems: ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'],
-            branches: ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'],
-            activities: {
-                good: ['嫁娶', '開市', '動土', '出行', '移徙', '交易', '入宅', '安床', '祭祀', '祈福'],
-                bad: ['探病', '安葬', '開倉', '破土', '訴訟', '掘井', '伐木']
-            },
-            
-            getDayInfo: (month, day) => {
-                const hash = (month * 31 + day) * 13; 
-                const stem = CALENDAR_ENGINE.stems[hash % 10];
-                const branch = CALENDAR_ENGINE.branches[hash % 12];
-                const isGoodDay = hash % 3 === 0;
-                const goodActs = CALENDAR_ENGINE.activities.good.filter((_, i) => (hash + i) % 2 === 0).slice(0, 3);
-                const badActs = CALENDAR_ENGINE.activities.bad.filter((_, i) => (hash + i) % 3 === 0).slice(0, 2);
-                
-                // 吉時推算 (簡化)
-                const luckyHours = ['辰', '巳', '午', '未'].filter((_, i) => (hash + i) % 2 === 0);
-
-                return {
-                    lunar: `農曆${month}月${day}日`,
-                    ganzhi: `${stem}${branch}日`,
-                    good: goodActs.join('、'),
-                    bad: badActs.join('、'),
-                    hours: luckyHours.join('、'),
-                    type: isGoodDay ? '吉' : '平'
-                };
-            }
+        const GENERAL_PAGES = {
+            "fengShuiChart": 10,
+            "fengShuiLayout": 376,
+            "accessories": 28,
+            "worldTrend": 8,
+            "calendar": 422
         };
 
-        // 風水數據
-        const FENG_SHUI = [
-            { pos: '東南', star: '九紫 (喜慶/財星)', color: 'bg-purple-100', text: '本年最強吉位！九紫屬火，主喜慶、結婚、添丁、財運。宜放置紅色地氈、紅色中國結或長明燈催旺。', icon: 'fa-fire' },
-            { pos: '正南', star: '五黃 (災星)', color: 'bg-yellow-100', text: '大凶位！五黃主災禍、疾病。切忌動土、裝修。宜放置銅鈴、銅錢或重型銅器化解。忌見紅黃兩色。', icon: 'fa-exclamation-triangle' },
-            { pos: '正北', star: '六白 (偏財/驛馬)', color: 'bg-blue-50', text: '利武職、變動、偏財。宜放置金色飾物、貔貅或流動性物品催旺。', icon: 'fa-horse' },
-            { pos: '西南', star: '七赤 (破軍)', color: 'bg-red-50', text: '主破財、官非、盜賊。宜用藍色物品或一杯水化解肅殺之氣。', icon: 'fa-shield-alt' },
-            { pos: '正東', star: '八白 (正財)', color: 'bg-yellow-50', text: '財星飛臨，雖已退氣但仍吉。宜放黃色、紅色物品或陶瓷催財。', icon: 'fa-coins' },
-            { pos: '中宮', star: '一白 (桃花)', color: 'bg-pink-50', text: '人緣桃花位。利人際關係、戀愛。宜放水種植物或粉紅水晶。', icon: 'fa-heart' },
-            { pos: '正西', star: '三碧 (是非)', color: 'bg-green-50', text: '主口舌是非、爭執。忌綠色、植物。宜用紅色物品（如紅地氈、紅燈）化解。', icon: 'fa-comments' },
-            { pos: '東北', star: '四綠 (文昌)', color: 'bg-green-100', text: '利讀書、考試、文職。宜放四支富貴竹或文昌塔催旺。', icon: 'fa-book' },
-            { pos: '西北', star: '二黑 (病星)', color: 'bg-gray-100', text: '小凶位，主疾病。避忌動土。宜掛銅錢或放銅葫蘆化病氣。', icon: 'fa-medkit' },
+        const DAY_PILLAR_START_PAGE = 254; 
+        const PAGES_PER_PILLAR = 2; 
+
+        const JIA_ZI = [
+            "甲子", "乙丑", "丙寅", "丁卯", "戊辰", "己巳", "庚午", "辛未", "壬申", "癸酉",
+            "甲戌", "乙亥", "丙子", "丁丑", "戊寅", "己卯", "庚辰", "辛巳", "壬午", "癸未",
+            "甲申", "乙酉", "丙戌", "丁亥", "戊子", "己丑", "庚寅", "辛卯", "壬辰", "癸巳",
+            "甲午", "乙未", "丙申", "丁酉", "戊戌", "己亥", "庚子", "辛丑", "壬寅", "癸卯",
+            "甲辰", "乙巳", "丙午", "丁未", "戊申", "己酉", "庚戌", "辛亥", "壬子", "癸丑",
+            "甲寅", "乙卯", "丙辰", "丁巳", "戊午", "己未", "庚申", "辛酉", "壬戌", "癸亥"
         ];
 
-        // ==========================================
-        // UI 組件 (Components)
-        // ==========================================
+        // --- 單頁渲染組件 ---
+        const PdfPagePreview = ({ pdfDoc, pageNum, pageOffset, scale = 2.0, title }) => {
+            const canvasRef = useRef(null);
+            const [status, setStatus] = useState('loading'); 
 
-        // 模擬書本彈窗
-        const BookModal = ({ title, content, onClose, type = "normal" }) => (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm fade-in modal-overlay" onClick={onClose}>
-                <div className="bg-[#fffdf5] w-full max-w-2xl max-h-[85vh] rounded-r-2xl rounded-l-md shadow-2xl overflow-y-auto border-l-[12px] border-red-900 relative modal-content" onClick={e => e.stopPropagation()}>
-                    <div className="print-header hidden">
-                        <h1 className="text-2xl font-bold">2026 丙午馬年運程報告</h1>
-                        <p className="text-sm text-gray-500">麥玲玲運程大師 AI 系統生成</p>
-                    </div>
+            useEffect(() => {
+                if (!pdfDoc || !pageNum) return;
 
-                    <div className="absolute top-0 right-8 w-8 h-24 bg-red-700 shadow-md flex items-end justify-center pb-2 text-white font-serif text-xs rounded-b no-print">
-                        書籤
-                    </div>
-                    
-                    <div className="p-8 font-serif">
-                        <h3 className="text-3xl font-bold text-red-900 mb-6 border-b-2 border-red-100 pb-4 flex items-center">
-                            {type === 'fortune' && <i className="fas fa-dragon mr-3 text-red-700 no-print"></i>}
-                            {title}
-                        </h3>
+                let renderTask = null;
+                const render = async () => {
+                    try {
+                        const actualPageNum = pageNum + parseInt(pageOffset);
+                        if (actualPageNum < 1 || actualPageNum > pdfDoc.numPages) {
+                            setStatus('error');
+                            return;
+                        }
+
+                        const page = await pdfDoc.getPage(actualPageNum);
+                        const canvas = canvasRef.current;
+                        if (!canvas) return;
+
+                        const viewport = page.getViewport({ scale });
+                        const context = canvas.getContext('2d');
+
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+
+                        const renderContext = {
+                            canvasContext: context,
+                            viewport: viewport
+                        };
                         
-                        <div className="prose prose-stone max-w-none text-gray-700 leading-loose text-justify whitespace-pre-line text-lg">
-                            {content}
-                        </div>
+                        renderTask = page.render(renderContext);
+                        await renderTask.promise;
+                        setStatus('success');
+                    } catch (error) {
+                        console.error(`Error rendering page ${pageNum}:`, error);
+                        setStatus('error');
+                    }
+                };
 
-                        <div className="mt-8 pt-6 border-t border-gray-200 text-center no-print">
-                            <button onClick={onClose} className="px-8 py-2 bg-red-900 text-white rounded-full hover:bg-red-800 transition shadow mr-4">
-                                關閉書頁
-                            </button>
-                            <button onClick={() => window.print()} className="px-8 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 transition shadow">
-                                <i className="fas fa-print mr-2"></i>列印本頁 / 存為 PDF
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
+                render();
 
-        const MasterSelection = ({ onSelect }) => (
-            <div className="min-h-screen flex items-center justify-center bg-stone-900 p-4 font-serif relative overflow-hidden">
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/chinese-new-year.png')]"></div>
-                <div className="bg-white/95 backdrop-blur rounded-3xl shadow-2xl p-8 max-w-4xl w-full text-center border-4 border-yellow-600 relative z-10">
-                    <h1 className="text-4xl md:text-6xl font-bold text-red-900 mb-4 tracking-widest">2026 丙午馬年</h1>
-                    <p className="text-xl text-gray-600 mb-12">運程大師 AI 預測系統 v5.1</p>
-                    <div className="grid md:grid-cols-2 gap-8">
-                        <div onClick={() => onSelect('mai')} className="group relative bg-red-50 hover:bg-red-100 border-2 border-red-200 hover:border-red-600 rounded-2xl p-8 cursor-pointer transition-all transform hover:-translate-y-2 shadow-md hover:shadow-xl">
-                            <div className="absolute -top-4 -right-4 bg-yellow-500 text-white px-4 py-1 rounded-full text-sm font-bold shadow animate-bounce">內容已整合</div>
-                            <div className="w-28 h-28 mx-auto bg-gray-200 rounded-full mb-6 overflow-hidden border-4 border-red-500 flex items-center justify-center shadow-inner text-5xl">👩‍🏫</div>
-                            <h3 className="text-3xl font-bold text-gray-800 mb-2">麥玲玲</h3>
-                            <p className="text-md text-gray-600 mb-6">《2026馬年運程》<br/>精準八字・通勝吉日</p>
-                            <button className="w-full py-2 bg-red-600 text-white rounded-lg group-hover:bg-red-700 transition">進入運程</button>
-                        </div>
-                        <div className="group relative bg-gray-100 border-2 border-dashed border-gray-300 rounded-2xl p-8 cursor-not-allowed opacity-60 grayscale">
-                            <div className="absolute -top-4 -right-4 bg-gray-400 text-white px-4 py-1 rounded-full text-sm font-bold shadow">即將推出</div>
-                            <div className="w-28 h-28 mx-auto bg-gray-200 rounded-full mb-6 flex items-center justify-center text-4xl text-gray-400 border-4 border-gray-300"><i className="fas fa-user-secret"></i></div>
-                            <h3 className="text-3xl font-bold text-gray-600 mb-2">神祕大師</h3>
-                            <p className="text-md text-gray-500 mb-6">《2026 奇門遁甲》<br/>敬請期待</p>
-                            <button disabled className="w-full py-2 bg-gray-300 text-white rounded-lg cursor-not-allowed">尚無法使用</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
+                return () => {
+                    if (renderTask) renderTask.cancel();
+                };
+            }, [pdfDoc, pageNum, pageOffset, scale]);
 
-        const UserInput = ({ onCalculate, onBack }) => {
-            const [data, setData] = useState({ name: '', gender: 'M', year: 1990, month: 1, day: 1, hour: 12 });
             return (
-                <div className="min-h-screen bg-red-800 flex items-center justify-center p-4 paper-texture">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden fade-in border-4 border-yellow-600">
-                        <div className="bg-red-700 p-6 flex items-center text-white relative">
-                            <button onClick={onBack} className="text-white hover:text-yellow-300 transition z-10"><i className="fas fa-chevron-left text-xl"></i></button>
-                            <div className="ml-4 z-10">
-                                <h2 className="text-2xl font-bold">輸入八字資料</h2>
-                                <p className="text-xs opacity-80">資料僅用於運程推算，絕不外流</p>
-                            </div>
-                        </div>
-                        <form onSubmit={(e) => { e.preventDefault(); onCalculate(data); }} className="p-8 space-y-5">
-                            <div><label className="block text-gray-700 text-sm font-bold mb-2">姓名</label><input required type="text" className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-red-500 outline-none bg-gray-50" value={data.name} onChange={e => setData({...data, name: e.target.value})} /></div>
-                            <div><label className="block text-gray-700 text-sm font-bold mb-2">性別</label><div className="flex gap-4"><button type="button" onClick={() => setData({...data, gender: 'M'})} className={`flex-1 py-3 rounded-xl border-2 font-bold transition ${data.gender === 'M' ? 'bg-blue-50 border-blue-500 text-blue-700' : 'border-gray-200 text-gray-400'}`}>男士</button><button type="button" onClick={() => setData({...data, gender: 'F'})} className={`flex-1 py-3 rounded-xl border-2 font-bold transition ${data.gender === 'F' ? 'bg-pink-50 border-pink-500 text-pink-700' : 'border-gray-200 text-gray-400'}`}>女士</button></div></div>
-                            <div className="grid grid-cols-3 gap-3">
-                                <div><label className="text-xs text-gray-500 font-bold mb-1 block">西曆年</label><input type="number" className="w-full p-3 border-2 border-gray-200 rounded-xl text-center font-bold" value={data.year} onChange={e => setData({...data, year: e.target.value})} /></div>
-                                <div><label className="text-xs text-gray-500 font-bold mb-1 block">月</label><input type="number" max="12" min="1" className="w-full p-3 border-2 border-gray-200 rounded-xl text-center font-bold" value={data.month} onChange={e => setData({...data, month: e.target.value})} /></div>
-                                <div><label className="text-xs text-gray-500 font-bold mb-1 block">日</label><input type="number" max="31" min="1" className="w-full p-3 border-2 border-gray-200 rounded-xl text-center font-bold" value={data.day} onChange={e => setData({...data, day: e.target.value})} /></div>
-                            </div>
-                            <div>
-                                <label className="text-xs text-red-600 font-bold mb-1 block"><i className="fas fa-clock mr-1"></i>出生時辰 (影響晚運精準度)</label>
-                                <div className="relative">
-                                    <select className="w-full p-3 border-2 border-gray-200 rounded-xl appearance-none bg-white font-medium text-gray-700" value={data.hour} onChange={e => setData({...data, hour: parseInt(e.target.value)})}>
-                                        {[...Array(24).keys()].map(h => <option key={h} value={h}>{h}:00 - {h}:59</option>)}
-                                    </select>
-                                    <div className="absolute right-3 top-3.5 text-gray-400 pointer-events-none"><i className="fas fa-chevron-down"></i></div>
-                                </div>
-                            </div>
-                            <button type="submit" className="w-full bg-red-700 text-white font-bold py-4 rounded-xl hover:opacity-90 transition shadow-lg text-lg flex items-center justify-center">開始批算 <i className="fas fa-arrow-right ml-2"></i></button>
-                        </form>
+                <div className="mb-4 break-inside-avoid page-preview-item">
+                    {/* 這裡改為 page-preview-title 類名，確保 CSS 能控制它在列印時顯示 */}
+                    <div className="flex justify-between items-center mb-2 border-b pb-1 page-preview-title">
+                        <h4 className="font-bold text-gray-700 text-lg">
+                            {title} <span className="text-sm font-normal text-gray-500">(書本 P.{pageNum})</span>
+                        </h4>
+                    </div>
+                    <div className="shadow-none flex items-center justify-center relative bg-white">
+                        {status === 'loading' && <div className="text-gray-400 text-sm py-10 no-print">正在載入頁面...</div>}
+                        {status === 'error' && <div className="text-red-400 text-sm py-10 no-print">無法載入頁面 (超出範圍或錯誤)</div>}
+                        <canvas 
+                            ref={canvasRef} 
+                            className="block mx-auto" 
+                            style={{ 
+                                width: '100%', 
+                                height: 'auto', 
+                                maxWidth: '210mm' 
+                            }}
+                        />
                     </div>
                 </div>
             );
         };
 
-        const ResultDashboard = ({ data, onBack }) => {
-            const [tab, setTab] = useState('zodiac');
-            const [modalContent, setModalContent] = useState(null);
-            const [selectedMonth, setSelectedMonth] = useState(1);
+        // --- 報告模態框組件 ---
+        const ReportModal = ({ userDestiny, inputData, pdfDoc, pageOffset, onClose }) => {
+            if (!userDestiny) return null;
             
-            // 八字計算
-            const pillars = useMemo(() => getPillars(data.year, data.month, data.day, data.hour), [data]);
-            const zodiacInfo = generateZodiacContent(pillars.zodiac);
+            const zodiacInfo = ZODIAC_DATA[userDestiny.zodiac];
+            const birthYearPage = zodiacInfo?.years[parseInt(inputData.year)];
             
-            // 日柱詳情生成
-            const dayPillarDetail = generateDayPillarDetail(pillars.dayPillar);
-            const pillarPage = BAZI_ENGINE.getPageNumber(pillars.dayPillar);
-            
-            // 流月與通勝
-            const dayPillarMonthly = useMemo(() => Array.from({length: 12}, (_, i) => BAZI_ENGINE.generateMonthlyFortune(pillars.dayStem, pillars.dayBranch, i + 1)), [pillars]);
-            const tongShengData = useMemo(() => Array.from({length: 30}, (_, i) => CALENDAR_ENGINE.getDayInfo(selectedMonth, i + 1)), [selectedMonth]);
+            const pagesToPrint = [
+                ...(userDestiny.fanTaiSui ? [{ title: "犯太歲化解", page: userDestiny.fanTaiSui.page }] : []),
+                { title: `${userDestiny.zodiac}年整體運勢`, page: zodiacInfo?.page },
+                { title: "財運 / 事業運", page: zodiacInfo?.wealth },
+                { title: "感情 / 健康運", page: zodiacInfo?.health },
+                ...(birthYearPage ? [{ title: `${inputData.year}年出生運程`, page: birthYearPage }] : []),
+                { title: "每月運程 (通勝)", page: zodiacInfo?.monthly },
+                { title: `日柱運勢 (${userDestiny.dayPillar}) - 上`, page: userDestiny.pillarPage },
+                { title: `日柱運勢 (${userDestiny.dayPillar}) - 下`, page: userDestiny.pillarPage + 1 },
+                { title: "開運風水佈局", page: GENERAL_PAGES.fengShuiLayout },
+            ].filter(item => item.page);
 
-            // 開啟書本彈窗
-            const openBook = (title, content) => {
-                setModalContent({ title, content });
+            const handlePrint = (e) => {
+                e.stopPropagation();
+                if (typeof window !== 'undefined' && window.print) {
+                    window.print();
+                } else {
+                    alert("您的設備不支援自動列印，請手動使用瀏覽器的列印功能。");
+                }
             };
 
             return (
-                <div className={`min-h-screen bg-stone-50 pb-20 font-sans paper-texture ${modalContent ? 'has-modal' : ''} main-content`}>
-                    {/* Header */}
-                    <div className="bg-red-800 text-white p-4 sticky top-0 z-40 shadow-lg flex justify-between items-center no-print">
-                        <div className="flex items-center gap-3">
-                            <button onClick={onBack} className="p-1 hover:bg-white/20 rounded transition"><i className="fas fa-chevron-left"></i></button>
-                            <div><h1 className="font-bold text-lg leading-none">{data.name} 的運程</h1></div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <div className="text-right">
-                                <div className="text-xs bg-black/20 px-2 py-1 rounded inline-block mb-1">{data.year} • {pillars.zodiac}肖</div>
-                                <div className="text-[10px] font-mono opacity-80 flex gap-2">
-                                    <span>日:{pillars.dayPillar}</span>
-                                    <span className="text-yellow-300">時:{pillars.hourPillar}</span>
-                                </div>
-                            </div>
-                            <button onClick={() => window.print()} className="bg-white/20 hover:bg-white/30 p-2 rounded-lg text-white" title="列印 / 另存為 PDF">
-                                <i className="fas fa-print"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Navigation */}
-                    <div className="bg-white shadow-sm flex overflow-x-auto whitespace-nowrap sticky top-[60px] z-30 no-print">
-                        {[{id: 'zodiac', label: '生肖運程', icon: 'fa-dragon'}, {id: 'pillar', label: '日柱詳批', icon: 'fa-scroll'}, {id: 'calendar', label: '每日通勝', icon: 'fa-calendar-alt'}, {id: 'fengshui', label: '風水佈局', icon: 'fa-compass'}].map(t => (
-                            <button key={t.id} onClick={() => setTab(t.id)} className={`flex-1 py-3 px-4 text-center border-b-4 transition-all flex flex-col items-center justify-center gap-1 text-xs font-bold ${tab === t.id ? 'border-red-600 text-red-600 bg-gray-50' : 'border-transparent text-gray-400'}`}>
-                                <i className={`fas ${t.icon}`}></i>{t.label}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="p-4 max-w-4xl mx-auto space-y-6 print-container">
+                <div id="report-modal" className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto report-container relative">
                         
-                        {/* 1. 生肖運程 */}
-                        {tab === 'zodiac' && (
-                            <div className="space-y-4 fade-in">
-                                <div className="bg-white rounded-xl shadow-sm p-6 border-t-4 border-red-600 relative">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div><h2 className="text-4xl font-bold text-gray-800 serif mb-1">{pillars.zodiac}</h2><span className="inline-block px-3 py-1 rounded-full text-xs font-bold text-white bg-red-500">{zodiacInfo.type}</span></div>
-                                        <div className="text-right"><div className="text-5xl opacity-10 text-red-800"><i className="fas fa-dragon"></i></div></div>
-                                    </div>
-                                    <p className="text-gray-600 leading-relaxed text-justify mb-4">{zodiacInfo.desc}</p>
+                        {/* 頂部工具列 */}
+                        <div className="sticky top-0 bg-gray-100 p-4 border-b flex justify-between items-center no-print z-20 shadow-sm">
+                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <Icon name="file-text" size={24} className="text-red-700"/>
+                                運程導讀報告預覽
+                            </h2>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={handlePrint}
+                                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition shadow-sm font-bold"
+                                >
+                                    <Icon name="printer" size={18} /> 打包列印 / 存為 PDF
+                                </button>
+                                <button 
+                                    onClick={onClose}
+                                    className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded transition shadow-sm"
+                                >
+                                    <Icon name="x" size={18} /> 關閉
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* 報告內容 */}
+                        <div className="p-8 md:p-12 print-content bg-white">
+                            {/* 頁眉 */}
+                            <div className="border-b-4 border-red-800 pb-4 mb-8 flex justify-between items-end break-after-avoid">
+                                <div>
+                                    <h1 className="text-3xl font-bold text-red-900">2026 蛇年運程專屬手冊</h1>
+                                    <p className="text-gray-600 mt-2">個人命盤 • 重點索引 • 頁面剪報</p>
                                 </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {['財運', '事業', '感情', '健康'].map(type => (
-                                        <button 
-                                            key={type}
-                                            onClick={() => openBook(`${type}詳解`, zodiacInfo.details[{'財運':'wealth','事業':'career','感情':'love','健康':'health'}[type]], null, 'fortune')}
-                                            className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:border-red-300 hover:bg-red-50 transition text-left group"
-                                        >
-                                            <div className="font-bold text-gray-800 mb-1 flex items-center justify-between">
-                                                {type}
-                                                <i className="fas fa-book-open text-gray-300 group-hover:text-red-500 no-print"></i>
-                                            </div>
-                                            <div className="text-xs text-gray-500">點擊查看書本詳解...</div>
-                                        </button>
-                                    ))}
+                                <div className="text-right text-sm text-gray-500">
+                                    生成日期：{new Date().toLocaleDateString()}
                                 </div>
                             </div>
-                        )}
 
-                        {/* 2. 日柱詳批 */}
-                        {tab === 'pillar' && (
-                            <div className="space-y-4 fade-in">
-                                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl shadow-sm p-6 text-center border border-yellow-100">
-                                    <div className="text-xs text-orange-400 mb-1 tracking-widest uppercase">出生日柱</div>
-                                    <div className="text-5xl font-bold text-orange-800 serif mb-2">{pillars.dayPillar}</div>
-                                    <p className="text-xs text-orange-600 max-w-xs mx-auto mb-4">日柱代表「自己」及「配偶宮」，比生肖更精準。</p>
-                                    <div className="flex justify-center gap-4 text-xs font-mono text-gray-500">
-                                        <span>年柱: {pillars.yearPillar}</span>
-                                        <span>時柱: {pillars.hourPillar}</span>
-                                    </div>
-                                    <div className="mt-4">
-                                        <button onClick={() => openBook(`${pillars.dayPillar}日柱詳解`, dayPillarDetail)} className="px-4 py-2 bg-orange-600 text-white rounded-full text-sm shadow hover:bg-orange-700 transition no-print">
-                                            <i className="fas fa-book-reader mr-2"></i>閱讀詳細分析 (P.{pillarPage})
-                                        </button>
-                                    </div>
-                                </div>
-                                {/* 簡易流月 */}
-                                <div className="bg-white rounded-xl shadow-sm overflow-hidden no-print">
-                                    <div className="bg-gray-800 text-white px-4 py-2 font-bold text-sm"><i className="fas fa-calendar-alt mr-2"></i>2026 流月運勢概覽</div>
-                                    <div className="divide-y divide-gray-100">
-                                        {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
-                                            <div key={m} className="p-3 flex items-center justify-between hover:bg-gray-50 transition cursor-pointer" onClick={() => openBook(`${m}月運勢`, `${dayPillarMonthly[m-1].title}：\n${dayPillarMonthly[m-1].content}`)}>
-                                                <div className="flex items-center gap-3">
-                                                    <span className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">{m}月</span>
-                                                    <span className="text-sm text-gray-700">運勢詳情...</span>
-                                                </div>
-                                                <i className="fas fa-chevron-right text-gray-300 text-xs"></i>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 3. 每日通勝 */}
-                        {tab === 'calendar' && (
-                            <div className="space-y-4 fade-in">
-                                <div className="bg-white p-4 rounded-xl shadow-sm">
-                                    <div className="flex justify-between items-center mb-4 border-b pb-2">
-                                        <h3 className="font-bold text-gray-800">每日通勝</h3>
-                                        <div className="flex gap-2 text-xs overflow-x-auto pb-1 no-print">
-                                            {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
-                                                <button key={m} onClick={() => setSelectedMonth(m)} className={`w-7 h-7 flex-shrink-0 rounded-full transition ${selectedMonth === m ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>{m}</button>
-                                            ))}
+                            {/* 命盤資訊 */}
+                            <section className="mb-10 break-inside-avoid">
+                                <h3 className="text-lg font-bold text-white bg-red-800 px-4 py-1 inline-block rounded-t-lg">01. 您的命盤</h3>
+                                <div className="border-2 border-red-800 p-6 rounded-b-lg rounded-tr-lg bg-red-50">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                        <div>
+                                            <p className="text-sm text-gray-500">姓名</p>
+                                            <p className="text-xl font-bold text-gray-900">{inputData.name || '使用者'}</p>
                                         </div>
-                                        <div className="text-xs font-bold text-red-600 print-only">農曆 {selectedMonth} 月</div>
-                                    </div>
-                                    <div className="grid gap-2 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                                        {tongShengData.map((day, i) => (
-                                            <div key={i} className="flex items-start gap-3 p-3 border rounded-lg bg-gray-50/50 cursor-pointer hover:bg-red-50 transition" onClick={() => openBook(`${day.lunar} 通勝`, `【干支】${day.ganzhi}\n【吉凶】${day.type}\n\n【宜】${day.good}\n【忌】${day.bad}\n\n【吉時】${day.hours}`)}>
-                                                <div className="text-center w-10 shrink-0 mt-1">
-                                                    <div className="text-xl font-bold font-serif text-gray-800">{i+1}</div>
-                                                    <div className={`text-[10px] rounded px-1 text-white ${day.type === '吉' ? 'bg-red-500' : 'bg-gray-400'}`}>{day.type}</div>
-                                                </div>
-                                                <div className="flex-1 text-xs space-y-1">
-                                                    <div className="text-gray-500">{day.ganzhi}</div>
-                                                    <div className="truncate text-green-700">宜: {day.good}</div>
-                                                    <div className="truncate text-red-700">忌: {day.bad}</div>
-                                                </div>
+                                        <div>
+                                            <p className="text-sm text-gray-500">性別 / 出生年</p>
+                                            <p className="text-xl font-bold text-gray-900">
+                                                {inputData.gender === 'M' ? '男' : '女'} / {inputData.year}年
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-500">生肖</p>
+                                            <p className="text-3xl font-bold text-red-700">{userDestiny.zodiac}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm text-gray-500">出生日柱</p>
+                                            <div className="flex items-end gap-2">
+                                                <p className="text-3xl font-bold text-purple-800">{userDestiny.dayPillar}</p>
+                                                <span className="text-xs text-gray-400 mb-1">(第{userDestiny.pillarIndex + 1}位)</span>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* 索引表格 */}
+                            <section className="mb-10 break-inside-avoid">
+                                <h3 className="text-lg font-bold text-white bg-red-800 px-4 py-1 inline-block rounded-t-lg">02. 閱讀索引</h3>
+                                <div className="border border-gray-300 rounded-b-lg rounded-tr-lg overflow-hidden">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead className="bg-gray-100 text-gray-700">
+                                            <tr>
+                                                <th className="p-3 border-b border-gray-200">內容說明</th>
+                                                <th className="p-3 border-b border-gray-200 w-32 text-center">書本頁碼</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-sm">
+                                            {pagesToPrint.map((item, idx) => (
+                                                <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                                    <td className="p-3 border-b border-gray-200 font-medium text-gray-800">{item.title}</td>
+                                                    <td className="p-3 border-b border-gray-200 text-center font-bold text-red-700">P.{item.page}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>
+
+                            {/* 導讀說明 */}
+                            <section className="mb-12 break-inside-avoid">
+                                <h3 className="text-lg font-bold text-white bg-gray-600 px-4 py-1 inline-block rounded-t-lg">03. 導讀說明</h3>
+                                <div className="border border-gray-300 p-6 rounded-b-lg rounded-tr-lg text-sm text-gray-700 leading-relaxed space-y-3 bg-white">
+                                    <p>
+                                        <strong>★ 關於日柱：</strong>八字中「日柱」代表您自己（日元）及夫妻宮。相比生肖（年柱），日柱運勢能更精細地反映個人流年際遇，請務必詳讀。
+                                    </p>
+                                    {userDestiny.fanTaiSui && (
+                                        <p className="text-red-800 bg-red-50 p-2 rounded">
+                                            <strong>⚠️ 關於犯太歲：</strong>今年您屬於「{userDestiny.fanTaiSui.type}」。犯太歲代表變動與衝擊，建議年初做好化解儀式（攝太歲），並多行善舉以保平安。
+                                        </p>
+                                    )}
+                                </div>
+                            </section>
+                            
+                            <div className="print-break" style={{ pageBreakAfter: 'always', height: '1px' }}></div>
+
+                            {/* 剪報 */}
+                            <section className="no-overflow-check">
+                                <div className="mb-6 break-inside-avoid no-print"> {/* Added no-print */}
+                                    <h3 className="text-2xl font-bold text-gray-800 border-l-8 border-red-700 pl-4">04. 專屬運程書剪報</h3>
+                                    <p className="text-gray-500 mt-1 pl-6">以下為系統自動從 PDF 擷取的個人專屬頁面</p>
+                                </div>
+
+                                {!pdfDoc ? (
+                                     <div className="p-8 bg-gray-100 text-center rounded-lg border-2 border-dashed border-gray-300">
+                                        <Icon name="alert-triangle" size={32} className="text-gray-400 mx-auto mb-2"/>
+                                        <p className="text-gray-500 font-bold">尚未載入 PDF 文件</p>
+                                        <p className="text-sm text-gray-400">請先在主畫面右上角上傳運程書 PDF，即可在此預覽頁面剪報。</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {pagesToPrint.map((item, index) => (
+                                            <PdfPagePreview 
+                                                key={index}
+                                                title={`${index + 1}. ${item.title}`}
+                                                pdfDoc={pdfDoc}
+                                                pageNum={item.page}
+                                                pageOffset={pageOffset}
+                                                scale={2.0} 
+                                            />
                                         ))}
                                     </div>
-                                </div>
-                            </div>
-                        )}
+                                )}
+                            </section>
 
-                        {/* 4. 風水佈局 */}
-                        {tab === 'fengshui' && (
-                            <div className="space-y-4 fade-in">
-                                <div className="grid grid-cols-3 gap-1 bg-white rounded-xl shadow-sm p-3 border">
-                                    {['東南', '南', '西南', '東', '中宮', '西', '東北', '北', '西北'].map((dir, idx) => {
-                                        const sector = FENG_SHUI.find(s => s.pos === (dir.includes('中') ? '中宮' : (dir.includes('南') && dir.length===1 ? '正南' : (dir.includes('北') && dir.length===1 ? '正北' : (dir.includes('東') && dir.length===1 ? '正東' : (dir.includes('西') && dir.length===1 ? '正西' : dir))))));
-                                        return (
-                                            <div key={idx} className={`aspect-square ${sector.color} flex flex-col items-center justify-center text-center p-1 relative group hover:z-10 hover:shadow-lg transition cursor-pointer`} onClick={() => openBook(`${dir}方 (${sector.star})`, `【方位詳解】\n此方位為 ${dir}，本年 ${sector.star} 飛臨。\n\n【吉凶】\n${sector.text}\n\n【化解/催旺】\n建議在此方位擺放對應風水物。`)}>
-                                                <span className="text-[10px] absolute top-1 left-1 opacity-50">{dir}</span>
-                                                <div className="mb-1 opacity-70 text-lg"><i className={`fas ${sector.icon}`}></i></div>
-                                                <span className="font-bold text-sm leading-tight text-gray-800">{sector.star.split(' ')[0]}</span>
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                                <p className="text-center text-xs text-gray-400 mt-2 no-print">點擊方位查看詳細佈局建議</p>
+                            <div className="text-center text-xs text-gray-400 mt-12 border-t pt-4 no-print">
+                                2026 麥玲玲運程書智能閱讀器 • Generated Report
                             </div>
-                        )}
-
+                        </div>
                     </div>
-
-                    {/* 書本彈窗 (列印時會顯示這個內容) */}
-                    {modalContent && <BookModal title={modalContent.title} content={modalContent.content} onClose={() => setModalContent(null)} />}
                 </div>
+            );
+        };
+
+        const SidebarItem = ({ label, subLabel, page, currentPage, offset, onClick, highlight = false, color = "red" }) => {
+            const targetPageWithOffset = page + parseInt(offset || 0);
+            const isSelected = targetPageWithOffset === currentPage;
+            
+            return (
+                <li 
+                    onClick={() => onClick(page)}
+                    className={`
+                        cursor-pointer p-3 rounded-md text-sm transition flex justify-between items-center group
+                        ${highlight ? 'bg-orange-100 text-orange-900 border border-orange-200 font-bold' : ''}
+                        ${isSelected ? 'bg-red-100 text-red-800 border-l-4 border-red-600' : 'hover:bg-gray-100 text-gray-700 border-l-4 border-transparent'}
+                    `}
+                >
+                    <div>
+                        <span className="block">{label}</span>
+                        {subLabel && <span className="text-xs text-gray-400 font-normal">{subLabel}</span>}
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <span className={`text-xs px-1.5 py-0.5 rounded group-hover:bg-gray-300 ${isSelected ? 'bg-red-200 text-red-800' : 'bg-gray-200 text-gray-500'}`}>
+                            P.{page}
+                        </span>
+                        {isSelected && <Icon name="eye" size={14} className="text-red-600" />}
+                    </div>
+                </li>
             );
         };
 
         const App = () => {
-            const [masterId, setMasterId] = useState(null);
-            const [userData, setUserData] = useState(null);
-            if (!masterId) return <MasterSelection onSelect={setMasterId} />;
-            if (!userData) return <UserInput onCalculate={setUserData} onBack={() => setMasterId(null)} />;
-            return <ResultDashboard data={userData} onBack={() => setUserData(null)} masterId={masterId} />;
-        };
+            const [scriptsLoaded, setScriptsLoaded] = useState(false);
+            
+            // PDF 狀態
+            const [pdfDoc, setPdfDoc] = useState(null);
+            const [pageNum, setPageNum] = useState(1);
+            const [pageCount, setPageCount] = useState(0);
+            const [scale, setScale] = useState(1.2); 
+            const [isRendering, setIsRendering] = useState(false);
+            
+            // PDF 校正預設 +7
+            const [pageOffset, setPageOffset] = useState(7); 
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
+            // 報告模態框狀態
+            const [showReport, setShowReport] = useState(false);
+
+            const canvasRef = useRef(null);
+            const renderTaskRef = useRef(null);
+
+            const [inputData, setInputData] = useState({
+                name: '',
+                year: '1990',
+                month: '1',
+                day: '1',
+                hour: '12',
+                gender: 'M'
+            });
+            const [userDestiny, setUserDestiny] = useState(null);
+
+            // 載入腳本
+            useEffect(() => {
+                const loadScript = (src) => {
+                    return new Promise((resolve, reject) => {
+                        if (document.querySelector(`script[src="${src}"]`)) {
+                            resolve();
+                            return;
+                        }
+                        const script = document.createElement('script');
+                        script.src = src;
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
+                };
+
+                Promise.all([
+                    loadScript("https://cdn.jsdelivr.net/npm/lunar-javascript@1.6.12/lunar.js"),
+                    loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js")
+                ]).then(() => {
+                    if (window.pdfjsLib) {
+                        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                        setScriptsLoaded(true);
+                    }
+                }).catch(err => {
+                    console.error("腳本載入失敗:", err);
+                    alert("資源載入失敗，請檢查網路連接");
+                });
+            }, []);
+
+            // 處理上傳
+            const handleFileChange = async (e) => {
+                if (!scriptsLoaded) return;
+                const file = e.target.files[0];
+                if (file && file.type === "application/pdf") {
+                    const fileReader = new FileReader();
+                    fileReader.onload = function() {
+                        const typedarray = new Uint8Array(this.result);
+                        loadPdf(typedarray);
+                    };
+                    fileReader.readAsArrayBuffer(file);
+                } else {
+                    alert("請上傳有效的 PDF 文件");
+                }
+            };
+
+            const loadPdf = async (data) => {
+                try {
+                    const loadingTask = window.pdfjsLib.getDocument(data);
+                    const pdf = await loadingTask.promise;
+                    setPdfDoc(pdf);
+                    setPageCount(pdf.numPages);
+                    setPageNum(1); 
+                } catch (error) {
+                    console.error("PDF 載入失敗:", error);
+                    alert("PDF 載入失敗，請確保檔案未損壞。");
+                }
+            };
+
+            const renderPage = useCallback(async () => {
+                if (!pdfDoc) return;
+                
+                if (renderTaskRef.current) {
+                    renderTaskRef.current.cancel();
+                }
+
+                setIsRendering(true);
+
+                try {
+                    const page = await pdfDoc.getPage(pageNum);
+                    const canvas = canvasRef.current;
+                    if (!canvas) return;
+
+                    const viewport = page.getViewport({ scale });
+                    const context = canvas.getContext('2d');
+
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    
+                    const renderTask = page.render(renderContext);
+                    renderTaskRef.current = renderTask;
+
+                    await renderTask.promise;
+                } catch (err) {
+                    if (err?.name === 'RenderingCancelledException') {
+                        // Ignore
+                    } else {
+                        console.error("渲染錯誤:", err);
+                    }
+                } finally {
+                    renderTaskRef.current = null;
+                    setIsRendering(false);
+                }
+            }, [pdfDoc, pageNum, scale]);
+
+            useEffect(() => {
+                renderPage();
+            }, [renderPage]);
+
+            const calculateDestiny = () => {
+                if (!window.Solar) {
+                    alert("計算模組尚未載入完成，請稍候");
+                    return;
+                }
+
+                const { year, month, day, hour } = inputData;
+                const solar = window.Solar.fromYmdHms(parseInt(year), parseInt(month), parseInt(day), parseInt(hour), 0, 0);
+                const lunar = solar.getLunar();
+                
+                let baziYear = lunar.getYearShengXiaoExact(); 
+                if (ZODIAC_MAP[baziYear]) {
+                    baziYear = ZODIAC_MAP[baziYear];
+                }
+
+                const dayPillar = lunar.getDayInGanZhi(); 
+                const yearGanZhi = lunar.getYearInGanZhi(); 
+
+                const pillarIndex = JIA_ZI.indexOf(dayPillar);
+                const pillarPage = Math.floor(DAY_PILLAR_START_PAGE + (pillarIndex * PAGES_PER_PILLAR));
+
+                setUserDestiny({
+                    name: inputData.name || '使用者',
+                    zodiac: baziYear,
+                    dayPillar: dayPillar,
+                    yearGanZhi: yearGanZhi,
+                    fanTaiSui: FAN_TAI_SUI_RULES[baziYear] || null,
+                    pillarIndex: pillarIndex,
+                    pillarPage: pillarPage
+                });
+            };
+
+            const goToPage = (targetPage) => {
+                let finalPage = targetPage + parseInt(pageOffset || 0);
+                if (finalPage < 1) finalPage = 1;
+                if (pdfDoc && finalPage > pdfDoc.numPages) finalPage = pdfDoc.numPages;
+                setPageNum(finalPage);
+            };
+
+            const changePage = (offset) => {
+                goToPage(pageNum + offset - parseInt(pageOffset || 0)); 
+            };
+
+            // 側邊欄渲染
+            const renderSidebar = () => {
+                if (!userDestiny) return (
+                    <div className="p-4 text-gray-500 text-sm">
+                        請先輸入出生資料以生成專屬目錄。
+                    </div>
+                );
+
+                const zodiacInfo = ZODIAC_DATA[userDestiny.zodiac];
+                if (!zodiacInfo) {
+                    return <div className="p-4 bg-red-100 text-red-800 text-sm">錯誤：找不到生肖數據。</div>;
+                }
+
+                const birthYearPage = zodiacInfo?.years[parseInt(inputData.year)];
+
+                return (
+                    <div className="space-y-6 pb-20">
+                        {/* 命盤概況 */}
+                        <div className="bg-red-50 p-4 rounded-lg border border-red-100">
+                            <h3 className="font-bold text-red-800 text-lg flex items-center gap-2">
+                                <Icon name="user" size={18} />
+                                {userDestiny.name} 的命盤
+                            </h3>
+                            <div className="mt-2 text-sm text-gray-700 space-y-1">
+                                <p>生肖：<span className="font-bold">{userDestiny.zodiac}</span></p>
+                                <p>日柱：<span className="font-bold">{userDestiny.dayPillar}</span> (第 {userDestiny.pillarIndex + 1} 位)</p>
+                            </div>
+                        </div>
+
+                        {/* 報告生成按鈕 */}
+                        <button 
+                            onClick={() => setShowReport(true)}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded shadow-md flex items-center justify-center gap-2 transition font-bold border border-blue-800"
+                        >
+                            <Icon name="layers" size={18} />
+                            📄 生成運程書頁面剪報
+                        </button>
+
+                        {userDestiny.fanTaiSui && (
+                            <div className="bg-red-600 text-white p-4 rounded-lg shadow-md cursor-pointer hover:bg-red-700 transition"
+                                 onClick={() => goToPage(userDestiny.fanTaiSui.page)}>
+                                <h3 className="font-bold flex items-center gap-2 mb-1">
+                                    <Icon name="alert-triangle" size={18} />
+                                    2026 犯太歲：{userDestiny.fanTaiSui.type}
+                                </h3>
+                                <p className="text-xs opacity-90">{userDestiny.fanTaiSui.desc}</p>
+                                <div className="mt-2 text-xs bg-white/20 inline-block px-2 py-1 rounded">
+                                    點擊查看化解錦囊 (P.{userDestiny.fanTaiSui.page})
+                                </div>
+                            </div>
+                        )}
+
+                        <div>
+                            <h3 className="text-gray-900 font-bold mb-3 px-2 flex items-center gap-2 border-l-4 border-red-500">
+                                <Icon name="book-open" size={18} />
+                                生肖運程 ({userDestiny.zodiac})
+                            </h3>
+                            <ul className="space-y-2">
+                                <SidebarItem label="整體運勢" page={zodiacInfo.page} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
+                                <SidebarItem label="財運 / 事業" page={zodiacInfo.wealth} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
+                                <SidebarItem label="感情 / 健康" page={zodiacInfo.health} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
+                                {birthYearPage && (
+                                    <SidebarItem 
+                                        label={`${inputData.year}年出生運程`} 
+                                        page={birthYearPage} 
+                                        highlight={true}
+                                        currentPage={pageNum}
+                                        offset={pageOffset}
+                                        onClick={goToPage} 
+                                    />
+                                )}
+                                <SidebarItem label="每月運程 (通勝)" page={zodiacInfo.monthly} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 className="text-gray-900 font-bold mb-3 px-2 flex items-center gap-2 border-l-4 border-purple-500">
+                                <Icon name="star" size={18} />
+                                出生日柱運勢
+                            </h3>
+                            <ul className="space-y-2">
+                                <SidebarItem 
+                                    label={`您的日柱：${userDestiny.dayPillar}`} 
+                                    subLabel={`精確定位：P.${userDestiny.pillarPage}`}
+                                    page={userDestiny.pillarPage} 
+                                    onClick={goToPage} 
+                                    currentPage={pageNum}
+                                    offset={pageOffset}
+                                    color="purple"
+                                />
+                                <div className="text-xs text-gray-400 px-2 mt-1">
+                                    *每個日柱佔 2 頁，此處連結到該日柱的首頁。
+                                </div>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3 className="text-gray-900 font-bold mb-3 px-2 flex items-center gap-2 border-l-4 border-yellow-500">
+                                <Icon name="compass" size={18} />
+                                風水與通用
+                            </h3>
+                            <ul className="space-y-2">
+                                <SidebarItem label="2026 世界大勢" page={GENERAL_PAGES.worldTrend} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
+                                <SidebarItem label="九宮飛星圖" page={GENERAL_PAGES.fengShuiChart} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
+                                <SidebarItem label="行好運風水佈局" page={GENERAL_PAGES.fengShuiLayout} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
+                                <SidebarItem label="開運飾物配對" page={GENERAL_PAGES.accessories} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
+                                <SidebarItem label="每日通勝" page={GENERAL_PAGES.calendar} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
+                            </ul>
+                        </div>
+                    </div>
+                );
+            };
+
+            if (!scriptsLoaded) {
+                return (
+                    <div className="h-screen w-full flex flex-col items-center justify-center bg-gray-50 text-gray-600">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-700 mb-4"></div>
+                        <p>正在初始化系統資源 (PDF引擎 & 農曆算法)...</p>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="flex flex-col h-screen overflow-hidden font-sans text-gray-800 bg-[#fdfbf7] app-container">
+                    
+                    {/* 報告模態框 */}
+                    {showReport && (
+                        <ReportModal 
+                            userDestiny={userDestiny} 
+                            inputData={inputData} 
+                            pdfDoc={pdfDoc}
+                            pageOffset={pageOffset}
+                            onClose={() => setShowReport(false)} 
+                        />
+                    )}
+
+                    {/* Header */}
+                    <header className="bg-red-800 text-white h-14 flex items-center px-4 md:px-6 justify-between shadow-lg z-10 shrink-0 no-print">
+                        <div className="flex items-center gap-2 font-bold text-lg overflow-hidden whitespace-nowrap">
+                            <Icon name="file-text" />
+                            <span className="hidden md:inline">2026 麥玲玲運程書 - </span>智能瀏覽器
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                            {pdfDoc && (
+                                <>
+                                    <div className="flex items-center bg-red-900 rounded px-2 py-1 gap-2">
+                                        <button onClick={() => changePage(-1)} disabled={pageNum <= 1} className="hover:text-red-300 disabled:opacity-30">
+                                            <Icon name="chevron-left" size={20}/>
+                                        </button>
+                                        <span className="text-sm font-mono w-16 text-center">{pageNum} / {pageCount}</span>
+                                        <button onClick={() => changePage(1)} disabled={pageNum >= pageCount} className="hover:text-red-300 disabled:opacity-30">
+                                            <Icon name="chevron-right" size={20}/>
+                                        </button>
+                                    </div>
+
+                                    <div className="flex items-center bg-red-900 rounded px-2 py-1 gap-2 hidden md:flex">
+                                        <button onClick={() => setScale(s => Math.max(0.5, s - 0.2))} className="hover:text-red-300">
+                                            <Icon name="minus" size={16}/>
+                                        </button>
+                                        <span className="text-xs">{Math.round(scale * 100)}%</span>
+                                        <button onClick={() => setScale(s => Math.min(3.0, s + 0.2))} className="hover:text-red-300">
+                                            <Icon name="plus" size={16}/>
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                            
+                            <div className="text-xs md:text-sm bg-red-900 px-3 py-1 rounded flex items-center gap-2 ml-2">
+                                <span className="hidden md:inline">PDF 校正:</span>
+                                <input 
+                                    type="number" 
+                                    value={pageOffset} 
+                                    onChange={(e) => setPageOffset(e.target.value)}
+                                    className="w-12 text-black px-1 rounded text-center"
+                                />
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Main Content */}
+                    <div className="flex flex-1 overflow-hidden no-print">
+                        {/* Sidebar */}
+                        <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full shadow-lg z-10 shrink-0">
+                            <div className="p-4 border-b border-gray-200 bg-gray-50 shrink-0">
+                                <div className="space-y-3">
+                                    <div className="flex gap-2">
+                                        <input 
+                                            type="text" 
+                                            placeholder="姓名" 
+                                            className="flex-1 p-2 border rounded text-sm"
+                                            value={inputData.name}
+                                            onChange={(e) => setInputData({...inputData, name: e.target.value})}
+                                        />
+                                        <select 
+                                            className="w-20 p-2 border rounded text-sm"
+                                            value={inputData.gender}
+                                            onChange={(e) => setInputData({...inputData, gender: e.target.value})}
+                                        >
+                                            <option value="M">男</option>
+                                            <option value="F">女</option>
+                                        </select>
+                                    </div>
+                                    <div className="flex gap-1">
+                                        <input type="number" placeholder="年" className="w-1/3 p-2 border rounded text-sm" value={inputData.year} onChange={(e) => setInputData({...inputData, year: e.target.value})} />
+                                        <input type="number" placeholder="月" className="w-1/3 p-2 border rounded text-sm" value={inputData.month} onChange={(e) => setInputData({...inputData, month: e.target.value})} />
+                                        <input type="number" placeholder="日" className="w-1/3 p-2 border rounded text-sm" value={inputData.day} onChange={(e) => setInputData({...inputData, day: e.target.value})} />
+                                    </div>
+                                    <button 
+                                        onClick={calculateDestiny}
+                                        className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded text-sm font-bold transition flex justify-center items-center gap-2"
+                                    >
+                                        <Icon name="search" size={16} />
+                                        開始分析 / 生成目錄
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-2 scrollbar-hide">
+                                {renderSidebar()}
+                            </div>
+
+                            <div className="p-4 border-t border-gray-200 bg-gray-100 shrink-0 text-center">
+                                <label className="cursor-pointer block">
+                                    <span className="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded text-sm block w-full transition font-medium">
+                                        {pdfDoc ? "更換 PDF 文件" : "📁 點擊上傳 PDF (建議)"}
+                                    </span>
+                                    <input type="file" className="hidden" accept=".pdf" onChange={handleFileChange} />
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* PDF Viewer */}
+                        <div className="flex-1 bg-gray-600 h-full relative overflow-auto flex justify-center p-4 md:p-8">
+                            {pdfDoc ? (
+                                <div className="relative">
+                                    <canvas ref={canvasRef} className="shadow-2xl bg-white max-w-full" />
+                                    {isRendering && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10">
+                                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-700"></div>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-full text-gray-300 space-y-4">
+                                    <Icon name="book-open" size={80} className="opacity-50" />
+                                    <div className="text-center">
+                                        <p className="text-xl font-bold mb-2">請上傳「2026年麥玲玲運程」PDF</p>
+                                        <p className="text-sm opacity-70">
+                                            上傳後，點擊左側目錄即可自動翻到對應頁面<br/>
+                                            (支援 Chrome / Safari / Edge / Firefox)
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
 </body>
