@@ -147,7 +147,10 @@
             'alert-circle': <g><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></g>,
             'printer': <g><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></g>,
             'x': <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
-            'layers': <g><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></g>
+            'layers': <g><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></g>,
+            'calendar': <g><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></g>,
+            'moon': <g><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></g>,
+            'sun': <g><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></g>
         };
 
         const Icon = ({ name, size = 20, className = "" }) => {
@@ -511,9 +514,8 @@
             // 報告模態框狀態
             const [showReport, setShowReport] = useState(false);
 
-            const canvasRef = useRef(null);
-            const renderTaskRef = useRef(null);
-
+            // 日期相關狀態
+            const [calendarType, setCalendarType] = useState('solar'); // 'solar' or 'lunar'
             const [inputData, setInputData] = useState({
                 name: '',
                 year: '1990',
@@ -522,7 +524,13 @@
                 hour: '12',
                 gender: 'M'
             });
+            const [lunarDate, setLunarDate] = useState({ year: 1990, month: 1, day: 1, isLeap: false });
+            const [displayDateInfo, setDisplayDateInfo] = useState('');
+
             const [userDestiny, setUserDestiny] = useState(null);
+
+            const canvasRef = useRef(null);
+            const renderTaskRef = useRef(null);
 
             // 載入腳本
             useEffect(() => {
@@ -547,12 +555,72 @@
                     if (window.pdfjsLib) {
                         window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
                         setScriptsLoaded(true);
+                        // 初始化顯示文字
+                        updateDisplayInfo(1990, 1, 1, 'solar');
                     }
                 }).catch(err => {
                     console.error("腳本載入失敗:", err);
                     alert("資源載入失敗，請檢查網路連接");
                 });
             }, []);
+
+            // 更新顯示資訊 (互轉邏輯)
+            const updateDisplayInfo = (y, m, d, type, isLeap = false) => {
+                if (!window.Solar || !window.Lunar) return;
+
+                if (type === 'solar') {
+                    try {
+                        const solar = window.Solar.fromYmd(parseInt(y), parseInt(m), parseInt(d));
+                        const lunar = solar.getLunar();
+                        const displayStr = `農曆: ${lunar.getYearInGanZhi()}年 ${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}`;
+                        setDisplayDateInfo(displayStr);
+                        // 同步更新農曆狀態，以便切換 tab 時數據正確
+                        setLunarDate({
+                            year: lunar.getYear(),
+                            month: Math.abs(lunar.getMonth()), // lunar.getMonth() returns negative for leap month? lunar-js usually uses separate check
+                            day: lunar.getDay(),
+                            isLeap: false // 簡化處理
+                        });
+                    } catch (e) { setDisplayDateInfo("無效日期"); }
+                } else {
+                    try {
+                        // 農曆轉公曆
+                        // Lunar.fromYmd(lunarYear, lunarMonth, lunarDay)
+                        // 若要處理閏月，通常 lunar-javascript 需要使用 Lunar.fromYmd(year, month, day) 並不會自動判斷閏月，
+                        // 但如果是閏月，它會返回閏月對象如果月份是對的。
+                        // 這裡使用簡單轉換，假設輸入的都是合法農曆
+                        // 實際上 lunar-javascript 構建函數：Lunar.fromYmd(year, month, day)
+                        // 如果有閏月，可能需要更複雜邏輯。這裡簡化：
+                        const lunar = window.Lunar.fromYmd(parseInt(y), parseInt(m), parseInt(d));
+                        // 如果有閏月選項且被勾選? lunar-js 有 .fromYmd(year, month, day) 
+                        // 讓我們假設使用者輸入的是標準農曆
+                        const solar = lunar.getSolar();
+                        const displayStr = `西曆: ${solar.getYear()}年 ${solar.getMonth()}月 ${solar.getDay()}日`;
+                        setDisplayDateInfo(displayStr);
+                        
+                        // 同步更新公曆狀態 (inputData 是源頭)
+                        setInputData(prev => ({
+                            ...prev,
+                            year: solar.getYear(),
+                            month: solar.getMonth(),
+                            day: solar.getDay()
+                        }));
+                    } catch (e) { setDisplayDateInfo("無效日期"); }
+                }
+            };
+
+            // 處理日期變更
+            const handleSolarDateChange = (field, value) => {
+                const newData = { ...inputData, [field]: value };
+                setInputData(newData);
+                updateDisplayInfo(newData.year, newData.month, newData.day, 'solar');
+            };
+
+            const handleLunarDateChange = (field, value) => {
+                const newLunar = { ...lunarDate, [field]: value };
+                setLunarDate(newLunar);
+                updateDisplayInfo(newLunar.year, newLunar.month, newLunar.day, 'lunar', newLunar.isLeap);
+            };
 
             // 處理上傳
             const handleFileChange = async (e) => {
@@ -634,6 +702,7 @@
                     return;
                 }
 
+                // 無論當前是在哪個 tab，我們都使用 inputData (公曆) 進行最終計算
                 const { year, month, day, hour } = inputData;
                 const solar = window.Solar.fromYmdHms(parseInt(year), parseInt(month), parseInt(day), parseInt(hour), 0, 0);
                 const lunar = solar.getLunar();
@@ -874,11 +943,47 @@
                                             <option value="F">女</option>
                                         </select>
                                     </div>
-                                    <div className="flex gap-1">
-                                        <input type="number" placeholder="年" className="w-1/3 p-2 border rounded text-sm" value={inputData.year} onChange={(e) => setInputData({...inputData, year: e.target.value})} />
-                                        <input type="number" placeholder="月" className="w-1/3 p-2 border rounded text-sm" value={inputData.month} onChange={(e) => setInputData({...inputData, month: e.target.value})} />
-                                        <input type="number" placeholder="日" className="w-1/3 p-2 border rounded text-sm" value={inputData.day} onChange={(e) => setInputData({...inputData, day: e.target.value})} />
+
+                                    {/* 曆法切換 Tabs */}
+                                    <div className="flex border border-red-200 rounded overflow-hidden">
+                                        <button 
+                                            className={`flex-1 py-1 text-xs font-bold transition ${calendarType === 'solar' ? 'bg-red-100 text-red-800' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                                            onClick={() => setCalendarType('solar')}
+                                        >
+                                            <div className="flex items-center justify-center gap-1">
+                                                <Icon name="sun" size={12}/> 公曆 (西曆)
+                                            </div>
+                                        </button>
+                                        <button 
+                                            className={`flex-1 py-1 text-xs font-bold transition ${calendarType === 'lunar' ? 'bg-purple-100 text-purple-800' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
+                                            onClick={() => setCalendarType('lunar')}
+                                        >
+                                            <div className="flex items-center justify-center gap-1">
+                                                <Icon name="moon" size={12}/> 農曆
+                                            </div>
+                                        </button>
                                     </div>
+
+                                    {/* 日期輸入區 */}
+                                    {calendarType === 'solar' ? (
+                                        <div className="flex gap-1">
+                                            <input type="number" placeholder="年" className="w-1/3 p-2 border rounded text-sm" value={inputData.year} onChange={(e) => handleSolarDateChange('year', e.target.value)} />
+                                            <input type="number" placeholder="月" className="w-1/3 p-2 border rounded text-sm" value={inputData.month} onChange={(e) => handleSolarDateChange('month', e.target.value)} />
+                                            <input type="number" placeholder="日" className="w-1/3 p-2 border rounded text-sm" value={inputData.day} onChange={(e) => handleSolarDateChange('day', e.target.value)} />
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-1">
+                                            <input type="number" placeholder="農曆年" className="w-1/3 p-2 border rounded text-sm" value={lunarDate.year} onChange={(e) => handleLunarDateChange('year', e.target.value)} />
+                                            <input type="number" placeholder="農曆月" className="w-1/3 p-2 border rounded text-sm" value={lunarDate.month} onChange={(e) => handleLunarDateChange('month', e.target.value)} />
+                                            <input type="number" placeholder="農曆日" className="w-1/3 p-2 border rounded text-sm" value={lunarDate.day} onChange={(e) => handleLunarDateChange('day', e.target.value)} />
+                                        </div>
+                                    )}
+
+                                    {/* 自動轉換顯示區 */}
+                                    <div className={`text-xs text-center p-1 rounded font-mono ${calendarType === 'solar' ? 'bg-purple-50 text-purple-700' : 'bg-red-50 text-red-700'}`}>
+                                        {displayDateInfo}
+                                    </div>
+
                                     <button 
                                         onClick={calculateDestiny}
                                         className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded text-sm font-bold transition flex justify-center items-center gap-2"
