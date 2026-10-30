@@ -169,6 +169,7 @@
                 reportTitle: '2026 馬年運程專屬手冊',
                 pdfName: '2026年麥玲玲運程.pdf',
                 DAY_PILLAR_START_PAGE: 254,
+                fanTaiSuiLength: 3, // 2026 犯太歲內容約3頁
                 FAN_TAI_SUI_RULES: {
                     "馬": { type: "本命年 + 刑太歲", page: 20, desc: "運勢波動，宜貼身佩戴羊形飾物。" },
                     "鼠": { type: "沖太歲", page: 20, desc: "變化最大，感情關口，宜動不宜靜。" },
@@ -198,11 +199,12 @@
                 reportTitle: '2027 羊年運程專屬手冊',
                 pdfName: '麥玲玲2027羊年YC電子書449p完整版（已优化）.pdf',
                 DAY_PILLAR_START_PAGE: 258,
+                fanTaiSuiLength: 8, // 2027 犯太歲錦囊為 23 - 30 頁 (共8頁)
                 FAN_TAI_SUI_RULES: {
-                    "羊": { type: "本命年犯太歲", page: 23, desc: "運勢波動，情緒易受困擾，宜辦喜事沖喜或佩戴馬形飾物。詳見錦囊23-30頁。" },
-                    "牛": { type: "沖太歲 + 刑太歲", page: 23, desc: "變化最大，易有各種變動及人際衝擊，宜佩戴蛇形及雞形飾物。詳見錦囊23-30頁。" },
-                    "狗": { type: "刑太歲 + 破太歲", page: 23, desc: "易惹是非及固有關係受破壞，宜保持低調並佩戴兔形飾物。詳見錦囊23-30頁。" },
-                    "鼠": { type: "害太歲", page: 23, desc: "易有小人暗中陷害，慎言慎行，宜佩戴猴形及龍形飾物。詳見錦囊23-30頁。" }
+                    "羊": { type: "本命年犯太歲", page: 23, desc: "運勢波動，情緒易受困擾，宜辦喜事沖喜或佩戴馬形飾物。詳見錦囊 23-30 頁。" },
+                    "牛": { type: "沖太歲 + 刑太歲", page: 23, desc: "變化最大，易有各種變動及人際衝擊，宜佩戴蛇形及雞形飾物。詳見錦囊 23-30 頁。" },
+                    "狗": { type: "刑太歲 + 破太歲", page: 23, desc: "易惹是非及固有關係受破壞，宜保持低調並佩戴兔形飾物。詳見錦囊 23-30 頁。" },
+                    "鼠": { type: "害太歲", page: 23, desc: "易有小人暗中陷害，慎言慎行，宜佩戴猴形及龍形飾物。詳見錦囊 23-30 頁。" }
                 },
                 GENERAL_PAGES: {
                     worldTrend: 1, fengShuiChart: 3, accessories: 31, fengShuiLayout: 379, calendar: 425
@@ -312,24 +314,33 @@
             );
         };
 
-        // --- 報告模態框組件 ---
+        // --- 報告模態框組件 (大幅升級多頁擷取邏輯) ---
         const ReportModal = ({ userDestiny, inputData, pdfDoc, pageOffset, currentConfig, onClose }) => {
             if (!userDestiny || !currentConfig) return null;
             
             const zodiacInfo = currentConfig.ZODIAC_DATA[userDestiny.zodiac];
             const birthYearPage = zodiacInfo?.years[parseInt(inputData.year)];
             
+            // 產生連續頁碼的輔助函數
+            const getPages = (start, length = 1) => {
+                if (!start) return [];
+                return Array.from({ length }, (_, i) => start + i);
+            };
+
+            // 根據各主題實際跨越的篇幅產生陣列 (例如犯太歲 8頁、整體運勢 2頁、流月 3頁等)
             const pagesToPrint = [
-                ...(userDestiny.fanTaiSui ? [{ title: "犯太歲化解", page: userDestiny.fanTaiSui.page }] : []),
-                { title: `${userDestiny.zodiac}年整體運勢`, page: zodiacInfo?.page },
-                { title: "財運 / 事業運", page: zodiacInfo?.wealth },
-                { title: "感情 / 健康運", page: zodiacInfo?.health },
-                ...(birthYearPage ? [{ title: `${inputData.year}年出生運程`, page: birthYearPage }] : []),
-                { title: "每月運程 (通勝)", page: zodiacInfo?.monthly },
-                { title: `日柱運勢 (${userDestiny.dayPillar}) - 上`, page: userDestiny.pillarPage },
-                { title: `日柱運勢 (${userDestiny.dayPillar}) - 下`, page: userDestiny.pillarPage + 1 },
-                { title: "開運風水佈局", page: currentConfig.GENERAL_PAGES.fengShuiLayout },
-            ].filter(item => item.page);
+                ...(userDestiny.fanTaiSui ? [{ 
+                    title: "犯太歲化解錦囊", 
+                    pages: getPages(userDestiny.fanTaiSui.page, currentConfig.fanTaiSuiLength || 1) 
+                }] : []),
+                { title: `${userDestiny.zodiac}年整體運勢`, pages: getPages(zodiacInfo?.page, 2) },
+                { title: "財運 / 事業運", pages: getPages(zodiacInfo?.wealth, 1) },
+                { title: "感情 / 健康運", pages: getPages(zodiacInfo?.health, 1) },
+                ...(birthYearPage ? [{ title: `${inputData.year}年出生運程`, pages: getPages(birthYearPage, 1) }] : []),
+                { title: "每月運程 (通勝)", pages: getPages(zodiacInfo?.monthly, 3) },
+                { title: `日柱運勢 (${userDestiny.dayPillar})`, pages: getPages(userDestiny.pillarPage, 2) },
+                { title: "開運風水佈局", pages: getPages(currentConfig.GENERAL_PAGES.fengShuiLayout, 2) },
+            ].filter(item => item.pages && item.pages.length > 0);
 
             const handlePrint = (e) => {
                 e.stopPropagation();
@@ -409,7 +420,7 @@
                                 </div>
                             </section>
 
-                            {/* 索引表格 */}
+                            {/* 索引表格 (顯示頁碼區間) */}
                             <section className="mb-10 break-inside-avoid">
                                 <h3 className="text-lg font-bold text-white bg-red-800 px-4 py-1 inline-block rounded-t-lg">02. 閱讀索引</h3>
                                 <div className="border border-gray-300 rounded-b-lg rounded-tr-lg overflow-hidden">
@@ -421,12 +432,17 @@
                                             </tr>
                                         </thead>
                                         <tbody className="text-sm">
-                                            {pagesToPrint.map((item, idx) => (
-                                                <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                                    <td className="p-3 border-b border-gray-200 font-medium text-gray-800">{item.title}</td>
-                                                    <td className="p-3 border-b border-gray-200 text-center font-bold text-red-700">P.{item.page}</td>
-                                                </tr>
-                                            ))}
+                                            {pagesToPrint.map((item, idx) => {
+                                                const pageText = item.pages.length > 1 
+                                                    ? `P.${item.pages[0]} - ${item.pages[item.pages.length - 1]}` 
+                                                    : `P.${item.pages[0]}`;
+                                                return (
+                                                    <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                                        <td className="p-3 border-b border-gray-200 font-medium text-gray-800">{item.title}</td>
+                                                        <td className="p-3 border-b border-gray-200 text-center font-bold text-red-700">{pageText}</td>
+                                                    </tr>
+                                                );
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
@@ -441,7 +457,7 @@
                                     </p>
                                     {userDestiny.fanTaiSui && (
                                         <p className="text-red-800 bg-red-50 p-2 rounded">
-                                            <strong>⚠️ 關於犯太歲：</strong>今年您屬於「{userDestiny.fanTaiSui.type}」。犯太歲代表變動與衝擊，建議年初做好化解儀式（攝太歲），並多行善舉以保平安。請務必詳閱書中 P.23 至 P.30 的化解錦囊。
+                                            <strong>⚠️ 關於犯太歲：</strong>今年您屬於「{userDestiny.fanTaiSui.type}」。犯太歲代表變動與衝擊，建議年初做好化解儀式（攝太歲），並多行善舉以保平安。詳見犯太歲錦囊章節。
                                         </p>
                                     )}
                                 </div>
@@ -449,11 +465,11 @@
                             
                             <div className="print-break" style={{ pageBreakAfter: 'always', height: '1px' }}></div>
 
-                            {/* 剪報 */}
+                            {/* 剪報 (自動展開所有多頁內容) */}
                             <section className="no-overflow-check">
                                 <div className="mb-6 break-inside-avoid no-print"> 
                                     <h3 className="text-2xl font-bold text-gray-800 border-l-8 border-red-700 pl-4">04. 專屬運程書剪報</h3>
-                                    <p className="text-gray-500 mt-1 pl-6">以下為系統自動從 PDF 擷取的個人專屬頁面</p>
+                                    <p className="text-gray-500 mt-1 pl-6">以下為系統自動從 PDF 擷取的完整個人專屬頁面 (共 {pagesToPrint.reduce((acc, val) => acc + val.pages.length, 0)} 頁)</p>
                                 </div>
 
                                 {!pdfDoc ? (
@@ -464,16 +480,25 @@
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
-                                        {pagesToPrint.map((item, index) => (
-                                            <PdfPagePreview 
-                                                key={index}
-                                                title={`${index + 1}. ${item.title}`}
-                                                pdfDoc={pdfDoc}
-                                                pageNum={item.page}
-                                                pageOffset={pageOffset}
-                                                scale={2.0} 
-                                            />
-                                        ))}
+                                        {/* 使用 flatMap 將所有項目的所有頁面攤平為單獨的預覽組件 */}
+                                        {pagesToPrint.flatMap((item, itemIndex) => 
+                                            item.pages.map((pageNum, idx) => {
+                                                // 如果該項目有多頁，加上 (第 X/Y 頁) 的提示
+                                                const titleSuffix = item.pages.length > 1 ? ` (第 ${idx + 1}/${item.pages.length} 頁)` : '';
+                                                const fullTitle = `${itemIndex + 1}. ${item.title}${titleSuffix}`;
+                                                
+                                                return (
+                                                    <PdfPagePreview 
+                                                        key={`${itemIndex}-${pageNum}`}
+                                                        title={fullTitle}
+                                                        pdfDoc={pdfDoc}
+                                                        pageNum={pageNum}
+                                                        pageOffset={pageOffset}
+                                                        scale={2.0} 
+                                                    />
+                                                );
+                                            })
+                                        )}
                                     </div>
                                 )}
                             </section>
@@ -785,7 +810,7 @@
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded shadow-md flex items-center justify-center gap-2 transition font-bold border border-blue-800"
                         >
                             <Icon name="layers" size={18} />
-                            📄 生成運程書頁面剪報
+                            📄 生成完整運程書剪報
                         </button>
 
                         {userDestiny.fanTaiSui && (
@@ -904,7 +929,7 @@
                                         <span className="text-sm font-mono w-16 text-center">{pageNum} / {pageCount}</span>
                                         <button onClick={() => changePage(1)} disabled={pageNum >= pageCount} className="hover:text-red-300 disabled:opacity-30">
                                             <Icon name="chevron-right" size={20}/>
-                                </button>
+                                        </button>
                                     </div>
 
                                     <div className="flex items-center bg-red-900 rounded px-2 py-1 gap-2 hidden md:flex">
