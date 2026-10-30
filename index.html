@@ -42,6 +42,11 @@
             .print-content { padding: 0 !important; }
             .page-preview-item { page-break-inside: avoid; break-inside: avoid; display: block; margin-bottom: 0 !important; padding-bottom: 0 !important; height: auto; max-height: 275mm; overflow: hidden; }
             .page-preview-item:not(:last-child) { page-break-after: always; break-after: page; }
+            .page-preview-title { display: flex !important; visibility: visible !important; font-size: 11pt; color: #333; border-bottom: 1px solid #ccc; margin-bottom: 5px; padding-bottom: 2px; }
+            .page-preview-item canvas { width: auto !important; max-width: 100% !important; max-height: 255mm !important; display: block; margin: 0 auto; object-fit: contain; }
+            section, tr, .no-overflow-check { page-break-inside: avoid; }
+            .break-after-avoid { page-break-after: avoid; }
+            .print-break { page-break-after: always; display: block !important; height: 1px; }
         }
     </style>
 </head>
@@ -158,7 +163,6 @@
         };
 
         // --- Canvas 輔助函數：將中文字轉換為透明背景的 PNG ---
-        // 這是為了解決 pdf-lib 無法直接輸出中文字的問題
         const createTextCanvas = (text, fontSize, color, isBold = true) => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -166,11 +170,9 @@
             ctx.font = fontString;
             const metrics = ctx.measureText(text);
             
-            // 加入一些緩衝空間防止字體被截斷
             canvas.width = Math.ceil(metrics.width) + 10; 
             canvas.height = fontSize + 15; 
             
-            // 重新設定 (因為調整 width/height 會重置 context)
             ctx.font = fontString;
             ctx.fillStyle = color;
             ctx.textBaseline = 'top';
@@ -225,7 +227,7 @@
             );
         };
 
-        // --- 報告模態框 (原生 PDF 匯出引擎 2.0 帶主題框架) ---
+        // --- 報告模態框 (原生 PDF 匯出引擎 3.0 - 核心修復) ---
         const ReportModal = ({ userDestiny, inputData, pdfDoc, rawPdfBytes, pageOffset, currentConfig, selectedYear, onClose }) => {
             const [exportStatus, setExportStatus] = useState('');
             const [includeWorldTrend, setIncludeWorldTrend] = useState(false);
@@ -320,10 +322,11 @@
                         });
                     });
                     
-                    // 4. 開始處理每一頁 (帶主題框架)
+                    // 4. 核心修復：使用 copyPages 然後 embedPages，手動計算比例 (修復 TypeError: ep.scaleToFit)
                     if (pageLayoutInfo.length > 0) {
                         const indices = pageLayoutInfo.map(info => info.actualIndex);
-                        const embeddedPages = await newPdf.embedPdf(rawPdfBytes, indices);
+                        const copiedPages = await newPdf.copyPages(originalPdf, indices);
+                        const embeddedPages = await newPdf.embedPages(copiedPages);
 
                         for (let i = 0; i < embeddedPages.length; i++) {
                             setExportStatus(`正在合成主題頁面 (${i + 1}/${totalPages})...`);
@@ -333,25 +336,23 @@
                             const info = pageLayoutInfo[i];
                             const page = newPdf.addPage([a4Width, a4Height]);
                             
-                            // 背景底色 (非常淺的米色)
+                            // 背景底色
                             page.drawRectangle({ x: 0, y: 0, width: a4Width, height: a4Height, color: rgb(0.99, 0.98, 0.96) });
                             
                             // --- 頂部 Header 框架 ---
                             const topBarHeight = 45;
                             const margin = 25;
-                            // 紅色背景條
                             page.drawRectangle({ 
                                 x: margin, y: a4Height - margin - topBarHeight, 
                                 width: a4Width - margin * 2, height: topBarHeight, 
                                 color: rgb(0.55, 0.11, 0.11) 
                             });
                             
-                            // 頂部標題文字 (透過 Canvas 轉 PNG 畫出中文字)
+                            // 頂部標題文字
                             const titleStr = `【 ${info.title} 】   原書 P.${info.originalPageNum}`;
                             const titleData = createTextCanvas(titleStr, 24, '#ffffff', true);
                             const titleImg = await newPdf.embedPng(titleData);
                             
-                            // 計算圖片縮放以適應 Header
                             const titleScale = 0.65;
                             page.drawImage(titleImg, { 
                                 x: margin + 15, 
@@ -387,16 +388,16 @@
                                 height: footerImg.height * 0.6 
                             });
 
-                            // --- 繪製原書頁面 ---
+                            // --- 繪製原書頁面 (手動計算縮放比) ---
                             const contentWidth = a4Width - margin * 2;
-                            const contentHeight = a4Height - margin * 2 - topBarHeight - bottomBarHeight - 20; // 留點空隙
-                            const dims = ep.scaleToFit(contentWidth, contentHeight);
+                            const contentHeight = a4Height - margin * 2 - topBarHeight - bottomBarHeight - 20;
+                            const scaleFactor = Math.min(contentWidth / ep.width, contentHeight / ep.height);
                             
                             page.drawPage(ep, {
-                                x: margin + (contentWidth - dims.width) / 2,
-                                y: margin + bottomBarHeight + 10 + (contentHeight - dims.height) / 2,
-                                width: dims.width,
-                                height: dims.height,
+                                x: margin + (contentWidth - (ep.width * scaleFactor)) / 2,
+                                y: margin + bottomBarHeight + 10 + (contentHeight - (ep.height * scaleFactor)) / 2,
+                                width: ep.width * scaleFactor,
+                                height: ep.height * scaleFactor,
                             });
                         }
                     }
@@ -415,7 +416,7 @@
                     
                 } catch (error) {
                     console.error("PDF Export Error:", error);
-                    alert("匯出 PDF 時發生錯誤。請嘗試取消勾選「世界大勢」或「每日通勝」章節再試一次。");
+                    alert("匯出 PDF 時發生錯誤，可能是檔案過大或記憶體不足。請嘗試取消勾選「世界大勢」或「每日通勝」章節再試一次。");
                 } finally { 
                     setExportStatus(''); 
                 }
@@ -622,7 +623,6 @@
                 setLunarDate(newLunar); updateDisplayInfo(newLunar.year, newLunar.month, newLunar.day, 'lunar', newLunar.isLeap);
             };
 
-            // 核心修復：防止 ArrayBuffer 擁有權被 PDF.js 奪走
             const handleFileChange = async (e) => {
                 if (!scriptsLoaded) return;
                 const file = e.target.files[0];
@@ -630,11 +630,11 @@
                     const fileReader = new FileReader();
                     fileReader.onload = function() {
                         const arrayBuffer = this.result;
-                        // 深拷貝一份給 pdf-lib，保護記憶體不被抽空
+                        // 1. 深拷貝保留給 PDF-LIB (防被轉移)
                         const rawBytes = new Uint8Array(arrayBuffer.slice(0));
                         setRawPdfBytes(rawBytes);
                         
-                        // 另一份給 PDF.js 預覽使用
+                        // 2. 原本的交給 PDF.js
                         const pdfjsBytes = new Uint8Array(arrayBuffer);
                         loadPdf(pdfjsBytes);
                     };
@@ -758,6 +758,8 @@
                 if (!userDestiny) return <div className="p-4 text-gray-500 text-sm">請先輸入出生資料以生成專屬目錄。</div>;
                 const zodiacInfo = currentConfig.ZODIAC_DATA[userDestiny.zodiac];
                 if (!zodiacInfo) return <div className="p-4 bg-red-100 text-red-800 text-sm">錯誤：找不到生肖數據。</div>;
+
+                const birthYearPage = zodiacInfo?.years[parseInt(inputData.year)];
 
                 return (
                     <div className="space-y-6 pb-20">
