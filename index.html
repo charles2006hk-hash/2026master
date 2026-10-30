@@ -242,13 +242,25 @@
 
             const handleExportNativePDF = async () => {
                 if (!rawPdfBytes) { alert("找不到原始電子書檔案，請重新上傳。"); return; }
+                
+                // 為了避免瀏覽器卡死，我們強制用非同步延遲來讓 React 先渲染 Loading 畫面
                 setIsGenerating(true);
+                await new Promise(resolve => setTimeout(resolve, 100));
+
                 try {
                     const { PDFDocument } = window.PDFLib;
+                    
                     const coverElement = document.getElementById('report-cover-section');
+                    // 為了確保截圖成功，我們設定一些固定的尺寸
                     const originalTransform = coverElement.style.transform;
                     coverElement.style.transform = "none"; 
-                    const canvas = await html2canvas(coverElement, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+                    
+                    const canvas = await html2canvas(coverElement, { 
+                        scale: 2, 
+                        useCORS: true, 
+                        backgroundColor: "#ffffff",
+                        windowWidth: 800
+                    });
                     const coverImageBytes = canvas.toDataURL('image/jpeg', 0.95);
                     coverElement.style.transform = originalTransform;
 
@@ -258,19 +270,30 @@
                     const page = newPdf.addPage([a4Width, a4Height]);
                     
                     const coverDims = coverImage.scaleToFit(a4Width, a4Height);
-                    page.drawImage(coverImage, { x: (a4Width - coverDims.width) / 2, y: a4Height - coverDims.height, width: coverDims.width, height: coverDims.height });
+                    page.drawImage(coverImage, { 
+                        x: (a4Width - coverDims.width) / 2, 
+                        y: a4Height - coverDims.height, 
+                        width: coverDims.width, 
+                        height: coverDims.height 
+                    });
 
-                    const originalPdf = await PDFDocument.load(rawPdfBytes);
+                    // 載入完整的 PDF (這一步會佔用較多記憶體)
+                    const originalPdf = await PDFDocument.load(rawPdfBytes, { ignoreEncryption: true });
                     const maxPages = originalPdf.getPageCount();
+                    
+                    // 收集所有需要提取的絕對頁碼索引 (0-based)
                     let pagesToExtract = [];
                     pagesToPrint.forEach(item => {
                         item.pages.forEach(p => {
                             const actualIndex = p + parseInt(pageOffset) - 1;
-                            if (actualIndex >= 0 && actualIndex < maxPages) { pagesToExtract.push(actualIndex); }
+                            if (actualIndex >= 0 && actualIndex < maxPages) { 
+                                pagesToExtract.push(actualIndex); 
+                            }
                         });
                     });
                     
                     if (pagesToExtract.length > 0) {
+                        // 使用 copyPages 批量複製，避免迴圈內存洩漏
                         const copiedPages = await newPdf.copyPages(originalPdf, pagesToExtract);
                         copiedPages.forEach((p) => newPdf.addPage(p));
                     }
@@ -281,10 +304,15 @@
                     link.href = URL.createObjectURL(blob);
                     link.download = `${inputData.name || '專屬'}_${currentConfig.yearTitle}運程報告.pdf`;
                     document.body.appendChild(link);
-                    link.click(); document.body.removeChild(link);
+                    link.click(); 
+                    document.body.removeChild(link);
+                    
                 } catch (error) {
-                    alert("匯出 PDF 時發生錯誤，可能是檔案過大或記憶體不足。建議取消勾選通勝章節。");
-                } finally { setIsGenerating(false); }
+                    console.error("PDF Export Error:", error);
+                    alert("匯出 PDF 時發生錯誤，可能是檔案過大或記憶體不足。請嘗試取消勾選「世界大勢」或「每日通勝」章節再試一次。");
+                } finally { 
+                    setIsGenerating(false); 
+                }
             };
 
             return (
@@ -300,7 +328,7 @@
                                 <button onClick={onClose} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded transition font-bold flex items-center gap-2"><Icon name="x" size={18} /> 取消</button>
                                 <button onClick={handleExportNativePDF} disabled={isGenerating} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded shadow-lg transition font-bold flex items-center gap-2 disabled:opacity-50">
                                     {isGenerating ? <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div> : <Icon name="download" size={18} />}
-                                    {isGenerating ? '正在合成 PDF...' : '📥 匯出專屬 PDF 報告'}
+                                    {isGenerating ? '正在合成中，請稍候...' : '📥 匯出專屬 PDF 報告'}
                                 </button>
                             </div>
                         </div>
@@ -308,10 +336,10 @@
                         <div className="bg-orange-50 p-4 border-b flex flex-wrap gap-6 shrink-0 items-center justify-center">
                             <span className="text-sm font-bold text-orange-800">可選附加內容：</span>
                             <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-gray-700 hover:text-red-700 transition">
-                                <input type="checkbox" className="w-4 h-4 accent-red-600" checked={includeWorldTrend} onChange={e => setIncludeWorldTrend(e.target.checked)} />世界大勢總論 (13頁)
+                                <input type="checkbox" className="w-4 h-4 accent-red-600" checked={includeWorldTrend} onChange={e => setIncludeWorldTrend(e.target.checked)} disabled={isGenerating}/>世界大勢總論 (13頁)
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-gray-700 hover:text-red-700 transition">
-                                <input type="checkbox" className="w-4 h-4 accent-red-600" checked={includeCalendar} onChange={e => setIncludeCalendar(e.target.checked)} />每日通勝曆法 (25頁)
+                                <input type="checkbox" className="w-4 h-4 accent-red-600" checked={includeCalendar} onChange={e => setIncludeCalendar(e.target.checked)} disabled={isGenerating}/>每日通勝曆法 (25頁)
                             </label>
                             <span className="text-xs text-gray-500 ml-4">目前預計匯出：<strong className="text-red-600 text-base">{totalPages + 1}</strong> 頁 (含封面)</span>
                         </div>
@@ -554,10 +582,8 @@
                 });
             };
 
-            // --- 新增：匯出 ICS 日曆邏輯 ---
             const handleExportICS = () => {
                 if (!userDestiny || !window.LunarYear) return;
-
                 const config = YEAR_CONFIGS[selectedYear];
                 const zodiacInfo = config.ZODIAC_DATA[userDestiny.zodiac];
                 
@@ -603,7 +629,6 @@
                     document.body.removeChild(link);
                     
                 } catch (err) {
-                    console.error(err);
                     alert("生成日曆時發生錯誤。");
                 }
             };
@@ -626,7 +651,6 @@
 
                 return (
                     <div className="space-y-6 pb-20">
-                        {/* 頂部操作按鈕區 */}
                         <div className="bg-white p-4 shadow-sm border-b sticky top-0 z-10 flex flex-col gap-3">
                             <button onClick={() => setShowReport(true)} className="w-full bg-red-700 hover:bg-red-800 text-white py-2.5 rounded shadow-sm flex items-center justify-center gap-2 transition font-bold text-sm">
                                 <Icon name="layers" size={18} /> 📥 匯出專屬運程 PDF
@@ -656,7 +680,7 @@
                             <ul className="space-y-2">
                                 <SidebarItem label={`開運攻略 - 肖${userDestiny.zodiac}`} page={zodiacInfo.strategy} offset={pageOffset} onClick={goToPage} />
                                 {userDestiny.fanTaiSui && (
-                                    <SidebarItem label="⚠️ 犯太歲化解錦囊" subLabel="(P.23 - P.30)" page={23} offset={pageOffset} onClick={goToPage} highlight={true} />
+                                    <SidebarItem label="⚠️ 犯太歲化解錦囊" subLabel={`(P.23 - P.30)`} page={23} offset={pageOffset} onClick={goToPage} highlight={true} />
                                 )}
                             </ul>
                         </div>
