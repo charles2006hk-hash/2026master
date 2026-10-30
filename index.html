@@ -5,14 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>麥玲玲運程書 - 專屬報告生成器 (2026/2027)</title>
     
+    <!-- 基礎 UI 與 React 庫 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
+    <!-- 八字算命核心 -->
     <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.6.12/lunar.js"></script>
+    <!-- PDF 預覽與處理雙引擎 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <!-- 封面截圖引擎 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
@@ -176,7 +180,7 @@
                         if (!canvas) return;
 
                         const viewport = page.getViewport({ scale });
-                        const context = canvas.getContext('2d');
+                        const context = canvas.getContext('2d', { willReadFrequently: true });
                         canvas.height = viewport.height;
                         canvas.width = viewport.width;
 
@@ -243,15 +247,13 @@
             const handleExportNativePDF = async () => {
                 if (!rawPdfBytes) { alert("找不到原始電子書檔案，請重新上傳。"); return; }
                 
-                // 為了避免瀏覽器卡死，我們強制用非同步延遲來讓 React 先渲染 Loading 畫面
                 setIsGenerating(true);
-                await new Promise(resolve => setTimeout(resolve, 100));
+                await new Promise(resolve => setTimeout(resolve, 100)); // 讓 React 渲染 Loading
 
                 try {
                     const { PDFDocument } = window.PDFLib;
                     
                     const coverElement = document.getElementById('report-cover-section');
-                    // 為了確保截圖成功，我們設定一些固定的尺寸
                     const originalTransform = coverElement.style.transform;
                     coverElement.style.transform = "none"; 
                     
@@ -277,11 +279,10 @@
                         height: coverDims.height 
                     });
 
-                    // 載入完整的 PDF (這一步會佔用較多記憶體)
+                    // 核心修復：使用我們事前獨立複製的 rawPdfBytes 載入，不會受 PDF.js Worker 轉移影響
                     const originalPdf = await PDFDocument.load(rawPdfBytes, { ignoreEncryption: true });
                     const maxPages = originalPdf.getPageCount();
                     
-                    // 收集所有需要提取的絕對頁碼索引 (0-based)
                     let pagesToExtract = [];
                     pagesToPrint.forEach(item => {
                         item.pages.forEach(p => {
@@ -293,7 +294,6 @@
                     });
                     
                     if (pagesToExtract.length > 0) {
-                        // 使用 copyPages 批量複製，避免迴圈內存洩漏
                         const copiedPages = await newPdf.copyPages(originalPdf, pagesToExtract);
                         copiedPages.forEach((p) => newPdf.addPage(p));
                     }
@@ -516,15 +516,21 @@
                 setLunarDate(newLunar); updateDisplayInfo(newLunar.year, newLunar.month, newLunar.day, 'lunar', newLunar.isLeap);
             };
 
+            // 核心修復：防止 PDF.js 搶走 ArrayBuffer 的所有權
             const handleFileChange = async (e) => {
                 if (!scriptsLoaded) return;
                 const file = e.target.files[0];
                 if (file && file.type === "application/pdf") {
                     const fileReader = new FileReader();
                     fileReader.onload = function() {
-                        const typedarray = new Uint8Array(this.result);
-                        setRawPdfBytes(typedarray);
-                        loadPdf(typedarray);
+                        const arrayBuffer = this.result;
+                        // 1. 給 pdf-lib 使用的深度複製，確保不會被清空
+                        const rawBytes = new Uint8Array(arrayBuffer.slice(0));
+                        setRawPdfBytes(rawBytes);
+                        
+                        // 2. 給 PDF.js 預覽使用
+                        const pdfjsBytes = new Uint8Array(arrayBuffer);
+                        loadPdf(pdfjsBytes);
                     };
                     fileReader.readAsArrayBuffer(file);
                 } else { alert("請上傳有效的 PDF 文件"); }
@@ -547,7 +553,7 @@
                     const canvas = canvasRef.current;
                     if (!canvas) return;
                     const viewport = page.getViewport({ scale });
-                    const context = canvas.getContext('2d');
+                    const context = canvas.getContext('2d', { willReadFrequently: true });
                     canvas.height = viewport.height; canvas.width = viewport.width;
                     renderTaskRef.current = page.render({ canvasContext: context, viewport: viewport });
                     await renderTaskRef.current.promise;
