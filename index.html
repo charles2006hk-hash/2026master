@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2027 麥玲玲運程書 - 智能瀏覽器</title>
+    <title>麥玲玲運程書 - 智能瀏覽器 (2026/2027)</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -25,7 +25,6 @@
         @media print {
             @page { size: A4; margin: 10mm; }
             
-            /* 重置高度與溢位，允許內容流動 */
             html, body, #root, .app-container {
                 height: auto !important;
                 min-height: 0 !important;
@@ -33,17 +32,14 @@
                 overflow-y: visible !important;
             }
 
-            /* 隱藏所有內容 */
             body * {
                 visibility: hidden;
             }
 
-            /* 只顯示報告模態框及其子元素 */
             #report-modal, #report-modal * {
                 visibility: visible;
             }
 
-            /* 將模態框定位到頁面頂部 */
             #report-modal {
                 position: absolute !important;
                 top: 0 !important;
@@ -70,7 +66,6 @@
             .no-print { display: none !important; }
             .print-content { padding: 0 !important; }
             
-            /* --- 分頁控制 --- */
             .page-preview-item { 
                 page-break-inside: avoid; 
                 break-inside: avoid;
@@ -167,49 +162,75 @@
             );
         };
 
-        // --- 2027 丁未羊年 數據設定 ---
-        const ZODIAC_DATA = {
-            "羊": { page: 46, monthly: 53, wealth: 48, health: 49, years: {1931:50, 1943:50, 1955:50, 1967:51, 1979:51, 1991:52, 2003:52, 2015:52, 2027:52} },
-            "猴": { page: 56, monthly: 63, wealth: 58, health: 59, years: {1932:60, 1944:60, 1956:60, 1968:61, 1980:61, 1992:62, 2004:62, 2016:62} },
-            "雞": { page: 66, monthly: 73, wealth: 68, health: 69, years: {1933:70, 1945:70, 1957:70, 1969:71, 1981:71, 1993:72, 2005:72, 2017:72} },
-            "狗": { page: 76, monthly: 83, wealth: 78, health: 79, years: {1934:80, 1946:80, 1958:80, 1970:81, 1982:81, 1994:82, 2006:82, 2018:82} },
-            "豬": { page: 86, monthly: 93, wealth: 88, health: 89, years: {1935:90, 1947:90, 1959:90, 1971:91, 1983:91, 1995:92, 2007:92, 2019:92} },
-            "鼠": { page: 96, monthly: 103, wealth: 98, health: 99, years: {1936:100, 1948:100, 1960:100, 1972:101, 1984:101, 1996:102, 2008:102, 2020:102} },
-            "牛": { page: 106, monthly: 113, wealth: 108, health: 109, years: {1937:110, 1949:110, 1961:110, 1973:111, 1985:111, 1997:112, 2009:112, 2021:112} },
-            "虎": { page: 116, monthly: 123, wealth: 118, health: 119, years: {1938:120, 1950:120, 1962:120, 1974:121, 1986:121, 1998:122, 2010:122, 2022:122} },
-            "兔": { page: 126, monthly: 133, wealth: 128, health: 129, years: {1939:130, 1951:130, 1963:130, 1975:131, 1987:131, 1999:132, 2011:132, 2023:132} },
-            "龍": { page: 136, monthly: 143, wealth: 138, health: 139, years: {1940:140, 1952:140, 1964:140, 1976:141, 1988:141, 2000:142, 2012:142, 2024:142} },
-            "蛇": { page: 146, monthly: 153, wealth: 148, health: 149, years: {1941:150, 1953:150, 1965:150, 1977:151, 1989:151, 2001:152, 2013:152, 2025:152} },
-            "馬": { page: 156, monthly: 163, wealth: 158, health: 159, years: {1942:160, 1954:160, 1966:160, 1978:161, 1990:161, 2002:162, 2014:162, 2026:162} }
+        // --- 多年度資料庫配置 ---
+        const YEAR_CONFIGS = {
+            '2026': {
+                yearTitle: '2026 丙午馬年',
+                reportTitle: '2026 馬年運程專屬手冊',
+                pdfName: '2026年麥玲玲運程.pdf',
+                DAY_PILLAR_START_PAGE: 254,
+                FAN_TAI_SUI_RULES: {
+                    "馬": { type: "本命年 + 刑太歲", page: 20, desc: "運勢波動，宜貼身佩戴羊形飾物。" },
+                    "鼠": { type: "沖太歲", page: 20, desc: "變化最大，感情關口，宜動不宜靜。" },
+                    "兔": { type: "破太歲", page: 21, desc: "人際破壞，破壞固有關係，慎言。" },
+                    "牛": { type: "害太歲", page: 21, desc: "小人作祟，陷害之意，保持低調。" }
+                },
+                GENERAL_PAGES: {
+                    worldTrend: 8, fengShuiChart: 10, accessories: 28, fengShuiLayout: 376, calendar: 422
+                },
+                ZODIAC_DATA: {
+                    "馬": { page: 42, monthly: 49, wealth: 44, health: 45, years: {1930:46, 1942:46, 1954:46, 1966:47, 1978:47, 1990:48, 2002:48, 2014:48} },
+                    "羊": { page: 52, monthly: 59, wealth: 54, health: 55, years: {1931:56, 1943:56, 1955:56, 1967:57, 1979:57, 1991:58, 2003:58, 2015:58} },
+                    "猴": { page: 62, monthly: 69, wealth: 64, health: 65, years: {1932:66, 1944:66, 1956:66, 1968:67, 1980:67, 1992:67, 2004:68, 2016:68} },
+                    "雞": { page: 72, monthly: 79, wealth: 74, health: 75, years: {1933:76, 1945:76, 1957:76, 1969:77, 1981:77, 1993:77, 2005:78, 2017:78} },
+                    "狗": { page: 82, monthly: 89, wealth: 84, health: 85, years: {1934:86, 1946:86, 1958:86, 1970:87, 1982:87, 1994:88, 2006:88, 2018:88} },
+                    "豬": { page: 92, monthly: 99, wealth: 94, health: 95, years: {1935:96, 1947:96, 1959:96, 1971:97, 1983:97, 1995:97, 2007:97, 2019:97} },
+                    "鼠": { page: 100, monthly: 109, wealth: 104, health: 105, years: {1936:106, 1948:106, 1960:106, 1972:107, 1984:107, 1996:108, 2008:108, 2020:108} },
+                    "牛": { page: 112, monthly: 119, wealth: 114, health: 115, years: {1937:116, 1949:116, 1961:116, 1973:117, 1985:117, 1997:118, 2009:118, 2021:118} },
+                    "虎": { page: 122, monthly: 129, wealth: 124, health: 125, years: {1938:126, 1950:126, 1962:126, 1974:127, 1986:127, 1998:128, 2010:128, 2022:128} },
+                    "兔": { page: 132, monthly: 139, wealth: 134, health: 135, years: {1939:136, 1951:136, 1963:136, 1975:137, 1987:137, 1999:138, 2011:138, 2023:138} },
+                    "龍": { page: 142, monthly: 149, wealth: 144, health: 145, years: {1940:146, 1952:146, 1964:146, 1976:147, 1988:147, 2000:148, 2012:148, 2024:148} },
+                    "蛇": { page: 150, monthly: 159, wealth: 154, health: 155, years: {1941:156, 1953:156, 1965:156, 1977:156, 1989:157, 2001:158, 2013:158, 2025:158} }
+                }
+            },
+            '2027': {
+                yearTitle: '2027 丁未羊年',
+                reportTitle: '2027 羊年運程專屬手冊',
+                pdfName: '麥玲玲2027羊年YC電子書449p完整版.pdf',
+                DAY_PILLAR_START_PAGE: 258,
+                FAN_TAI_SUI_RULES: {
+                    "羊": { type: "本命年犯太歲", page: 23, desc: "運勢起伏較大，情緒易波動，宜辦喜事沖喜或佩戴馬形飾物。" },
+                    "牛": { type: "沖太歲", page: 23, desc: "變化最大，易有轉工、搬屋、感情變動，宜佩戴蛇或雞形飾物。" },
+                    "鼠": { type: "害太歲", page: 23, desc: "小人作祟，人際關係易受破壞，宜保持低調並佩戴猴或龍形飾物。" },
+                    "狗": { type: "破太歲", page: 23, desc: "破壞固有關係，易有破財，做事需謹慎，宜佩戴虎或馬形飾物。" }
+                },
+                GENERAL_PAGES: {
+                    worldTrend: 1, fengShuiChart: 3, accessories: 31, fengShuiLayout: 379, calendar: 425
+                },
+                ZODIAC_DATA: {
+                    "羊": { page: 46, monthly: 53, wealth: 48, health: 49, years: {1931:50, 1943:50, 1955:50, 1967:51, 1979:51, 1991:52, 2003:52, 2015:52, 2027:52} },
+                    "猴": { page: 56, monthly: 63, wealth: 58, health: 59, years: {1932:60, 1944:60, 1956:60, 1968:61, 1980:61, 1992:62, 2004:62, 2016:62} },
+                    "雞": { page: 66, monthly: 73, wealth: 68, health: 69, years: {1933:70, 1945:70, 1957:70, 1969:71, 1981:71, 1993:72, 2005:72, 2017:72} },
+                    "狗": { page: 76, monthly: 83, wealth: 78, health: 79, years: {1934:80, 1946:80, 1958:80, 1970:81, 1982:81, 1994:82, 2006:82, 2018:82} },
+                    "豬": { page: 86, monthly: 93, wealth: 88, health: 89, years: {1935:90, 1947:90, 1959:90, 1971:91, 1983:91, 1995:92, 2007:92, 2019:92} },
+                    "鼠": { page: 96, monthly: 103, wealth: 98, health: 99, years: {1936:100, 1948:100, 1960:100, 1972:101, 1984:101, 1996:102, 2008:102, 2020:102} },
+                    "牛": { page: 106, monthly: 113, wealth: 108, health: 109, years: {1937:110, 1949:110, 1961:110, 1973:111, 1985:111, 1997:112, 2009:112, 2021:112} },
+                    "虎": { page: 116, monthly: 123, wealth: 118, health: 119, years: {1938:120, 1950:120, 1962:120, 1974:121, 1986:121, 1998:122, 2010:122, 2022:122} },
+                    "兔": { page: 126, monthly: 133, wealth: 128, health: 129, years: {1939:130, 1951:130, 1963:130, 1975:131, 1987:131, 1999:132, 2011:132, 2023:132} },
+                    "龍": { page: 136, monthly: 143, wealth: 138, health: 139, years: {1940:140, 1952:140, 1964:140, 1976:141, 1988:141, 2000:142, 2012:142, 2024:142} },
+                    "蛇": { page: 146, monthly: 153, wealth: 148, health: 149, years: {1941:150, 1953:150, 1965:150, 1977:151, 1989:151, 2001:152, 2013:152, 2025:152} },
+                    "馬": { page: 156, monthly: 163, wealth: 158, health: 159, years: {1942:160, 1954:160, 1966:160, 1978:161, 1990:161, 2002:162, 2014:162, 2026:162} }
+                }
+            }
         };
 
-        // 簡體到繁體生肖映射
         const ZODIAC_MAP = {
             '马': '馬', '鸡': '雞', '猪': '豬', '龙': '龍',
             '馬': '馬', '羊': '羊', '猴': '猴', '雞': '雞', '狗': '狗', '豬': '豬',
             '鼠': '鼠', '牛': '牛', '虎': '虎', '兔': '兔', '龍': '龍', '蛇': '蛇'
         };
 
-        // 2027 丁未羊年 犯太歲規則
-        const FAN_TAI_SUI_RULES = {
-            "羊": { type: "本命年犯太歲", page: 23, desc: "運勢起伏較大，情緒易波動，宜辦喜事沖喜或佩戴馬形飾物。" },
-            "牛": { type: "沖太歲", page: 23, desc: "變化最大，易有轉工、搬屋、感情變動，宜佩戴蛇或雞形飾物。" },
-            "鼠": { type: "害太歲", page: 23, desc: "小人作祟，人際關係易受破壞，宜保持低調並佩戴猴或龍形飾物。" },
-            "狗": { type: "破太歲", page: 23, desc: "破壞固有關係，易有破財，做事需謹慎，宜佩戴虎或馬形飾物。" }
-        };
-
-        // 2027 目錄對應
-        const GENERAL_PAGES = {
-            "worldTrend": 1,
-            "fengShuiChart": 3,
-            "accessories": 31, // 十二生肖開運攻略
-            "fengShuiLayout": 379,
-            "calendar": 425
-        };
-
-        const DAY_PILLAR_START_PAGE = 258; // 根據目錄，日柱解說從258開始
         const PAGES_PER_PILLAR = 2; 
-
         const JIA_ZI = [
             "甲子", "乙丑", "丙寅", "丁卯", "戊辰", "己巳", "庚午", "辛未", "壬申", "癸酉",
             "甲戌", "乙亥", "丙子", "丁丑", "戊寅", "己卯", "庚辰", "辛巳", "壬午", "癸未",
@@ -280,11 +301,7 @@
                         <canvas 
                             ref={canvasRef} 
                             className="block mx-auto" 
-                            style={{ 
-                                width: '100%', 
-                                height: 'auto', 
-                                maxWidth: '210mm' 
-                            }}
+                            style={{ width: '100%', height: 'auto', maxWidth: '210mm' }}
                         />
                     </div>
                 </div>
@@ -292,10 +309,10 @@
         };
 
         // --- 報告模態框組件 ---
-        const ReportModal = ({ userDestiny, inputData, pdfDoc, pageOffset, onClose }) => {
-            if (!userDestiny) return null;
+        const ReportModal = ({ userDestiny, inputData, pdfDoc, pageOffset, currentConfig, onClose }) => {
+            if (!userDestiny || !currentConfig) return null;
             
-            const zodiacInfo = ZODIAC_DATA[userDestiny.zodiac];
+            const zodiacInfo = currentConfig.ZODIAC_DATA[userDestiny.zodiac];
             const birthYearPage = zodiacInfo?.years[parseInt(inputData.year)];
             
             const pagesToPrint = [
@@ -307,7 +324,7 @@
                 { title: "每月運程 (通勝)", page: zodiacInfo?.monthly },
                 { title: `日柱運勢 (${userDestiny.dayPillar}) - 上`, page: userDestiny.pillarPage },
                 { title: `日柱運勢 (${userDestiny.dayPillar}) - 下`, page: userDestiny.pillarPage + 1 },
-                { title: "開運風水佈局", page: GENERAL_PAGES.fengShuiLayout },
+                { title: "開運風水佈局", page: currentConfig.GENERAL_PAGES.fengShuiLayout },
             ].filter(item => item.page);
 
             const handlePrint = (e) => {
@@ -350,7 +367,7 @@
                             {/* 頁眉 */}
                             <div className="border-b-4 border-red-800 pb-4 mb-8 flex justify-between items-end break-after-avoid">
                                 <div>
-                                    <h1 className="text-3xl font-bold text-red-900">2027 羊年運程專屬手冊</h1>
+                                    <h1 className="text-3xl font-bold text-red-900">{currentConfig.reportTitle}</h1>
                                     <p className="text-gray-600 mt-2">個人命盤 • 重點索引 • 頁面剪報</p>
                                 </div>
                                 <div className="text-right text-sm text-gray-500">
@@ -430,7 +447,7 @@
 
                             {/* 剪報 */}
                             <section className="no-overflow-check">
-                                <div className="mb-6 break-inside-avoid no-print">
+                                <div className="mb-6 break-inside-avoid no-print"> 
                                     <h3 className="text-2xl font-bold text-gray-800 border-l-8 border-red-700 pl-4">04. 專屬運程書剪報</h3>
                                     <p className="text-gray-500 mt-1 pl-6">以下為系統自動從 PDF 擷取的個人專屬頁面</p>
                                 </div>
@@ -458,7 +475,7 @@
                             </section>
 
                             <div className="text-center text-xs text-gray-400 mt-12 border-t pt-4 no-print">
-                                2027 麥玲玲運程書智能閱讀器 • Generated Report
+                                麥玲玲運程書智能閱讀器 • Generated Report
                             </div>
                         </div>
                     </div>
@@ -496,20 +513,20 @@
         const App = () => {
             const [scriptsLoaded, setScriptsLoaded] = useState(false);
             
+            // --- 新增：年份切換狀態 ---
+            const [selectedYear, setSelectedYear] = useState('2027');
+            const currentConfig = YEAR_CONFIGS[selectedYear];
+
             // PDF 狀態
             const [pdfDoc, setPdfDoc] = useState(null);
             const [pageNum, setPageNum] = useState(1);
             const [pageCount, setPageCount] = useState(0);
             const [scale, setScale] = useState(1.2); 
             const [isRendering, setIsRendering] = useState(false);
-            
-            // PDF 校正預設 +7
             const [pageOffset, setPageOffset] = useState(7); 
-
-            // 報告模態框狀態
             const [showReport, setShowReport] = useState(false);
 
-            // 日期相關狀態
+            // 日期狀態
             const [calendarType, setCalendarType] = useState('solar');
             const [inputData, setInputData] = useState({
                 name: '',
@@ -521,7 +538,6 @@
             });
             const [lunarDate, setLunarDate] = useState({ year: 1990, month: 1, day: 1, isLeap: false });
             const [displayDateInfo, setDisplayDateInfo] = useState('');
-
             const [userDestiny, setUserDestiny] = useState(null);
 
             const canvasRef = useRef(null);
@@ -557,6 +573,13 @@
                     alert("資源載入失敗，請檢查網路連接");
                 });
             }, []);
+
+            // 當切換年份且已經有計算過命盤時，自動重新計算新一年的資料
+            useEffect(() => {
+                if (userDestiny) {
+                    calculateDestiny();
+                }
+            }, [selectedYear]);
 
             // 更新顯示資訊 (互轉邏輯)
             const updateDisplayInfo = (y, m, d, type, isLeap = false) => {
@@ -697,14 +720,16 @@
                 const yearGanZhi = lunar.getYearInGanZhi(); 
 
                 const pillarIndex = JIA_ZI.indexOf(dayPillar);
-                const pillarPage = Math.floor(DAY_PILLAR_START_PAGE + (pillarIndex * PAGES_PER_PILLAR));
+                // 根據當前選擇的年份取得正確的起始頁碼
+                const config = YEAR_CONFIGS[selectedYear];
+                const pillarPage = Math.floor(config.DAY_PILLAR_START_PAGE + (pillarIndex * PAGES_PER_PILLAR));
 
                 setUserDestiny({
                     name: inputData.name || '使用者',
                     zodiac: baziYear,
                     dayPillar: dayPillar,
                     yearGanZhi: yearGanZhi,
-                    fanTaiSui: FAN_TAI_SUI_RULES[baziYear] || null,
+                    fanTaiSui: config.FAN_TAI_SUI_RULES[baziYear] || null,
                     pillarIndex: pillarIndex,
                     pillarPage: pillarPage
                 });
@@ -729,7 +754,7 @@
                     </div>
                 );
 
-                const zodiacInfo = ZODIAC_DATA[userDestiny.zodiac];
+                const zodiacInfo = currentConfig.ZODIAC_DATA[userDestiny.zodiac];
                 if (!zodiacInfo) {
                     return <div className="p-4 bg-red-100 text-red-800 text-sm">錯誤：找不到生肖數據。</div>;
                 }
@@ -764,7 +789,7 @@
                                  onClick={() => goToPage(userDestiny.fanTaiSui.page)}>
                                 <h3 className="font-bold flex items-center gap-2 mb-1">
                                     <Icon name="alert-triangle" size={18} />
-                                    2027 犯太歲：{userDestiny.fanTaiSui.type}
+                                    {selectedYear} 犯太歲：{userDestiny.fanTaiSui.type}
                                 </h3>
                                 <p className="text-xs opacity-90">{userDestiny.fanTaiSui.desc}</p>
                                 <div className="mt-2 text-xs bg-white/20 inline-block px-2 py-1 rounded">
@@ -823,11 +848,11 @@
                                 風水與通用
                             </h3>
                             <ul className="space-y-2">
-                                <SidebarItem label="2027 世界大勢" page={GENERAL_PAGES.worldTrend} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
-                                <SidebarItem label="九宮飛星圖" page={GENERAL_PAGES.fengShuiChart} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
-                                <SidebarItem label="行好運風水佈局" page={GENERAL_PAGES.fengShuiLayout} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
-                                <SidebarItem label="十二生肖開運攻略" page={GENERAL_PAGES.accessories} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
-                                <SidebarItem label="每日通勝" page={GENERAL_PAGES.calendar} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
+                                <SidebarItem label="世界大勢" page={currentConfig.GENERAL_PAGES.worldTrend} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
+                                <SidebarItem label="九宮飛星圖" page={currentConfig.GENERAL_PAGES.fengShuiChart} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
+                                <SidebarItem label="行好運風水佈局" page={currentConfig.GENERAL_PAGES.fengShuiLayout} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
+                                <SidebarItem label="十二生肖開運攻略/飾物" page={currentConfig.GENERAL_PAGES.accessories} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
+                                <SidebarItem label="每日通勝" page={currentConfig.GENERAL_PAGES.calendar} currentPage={pageNum} offset={pageOffset} onClick={goToPage} />
                             </ul>
                         </div>
                     </div>
@@ -853,6 +878,7 @@
                             inputData={inputData} 
                             pdfDoc={pdfDoc}
                             pageOffset={pageOffset}
+                            currentConfig={currentConfig}
                             onClose={() => setShowReport(false)} 
                         />
                     )}
@@ -861,7 +887,7 @@
                     <header className="bg-red-800 text-white h-14 flex items-center px-4 md:px-6 justify-between shadow-lg z-10 shrink-0 no-print">
                         <div className="flex items-center gap-2 font-bold text-lg overflow-hidden whitespace-nowrap">
                             <Icon name="file-text" />
-                            <span className="hidden md:inline">2027 麥玲玲運程書 - </span>智能瀏覽器
+                            <span className="hidden md:inline">{currentConfig.yearTitle}麥玲玲運程書 - </span>智能瀏覽器
                         </div>
                         
                         <div className="flex items-center gap-2">
@@ -905,6 +931,23 @@
                     <div className="flex flex-1 overflow-hidden no-print">
                         {/* Sidebar */}
                         <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full shadow-lg z-10 shrink-0">
+                            
+                            {/* --- 新增：年份切換區塊 --- */}
+                            <div className="p-3 bg-red-50 border-b border-red-200 flex gap-2 justify-center">
+                                <button 
+                                    className={`px-4 py-1 rounded-full text-sm font-bold transition ${selectedYear === '2026' ? 'bg-red-700 text-white shadow' : 'bg-white text-red-700 border border-red-300'}`}
+                                    onClick={() => setSelectedYear('2026')}
+                                >
+                                    2026 馬年
+                                </button>
+                                <button 
+                                    className={`px-4 py-1 rounded-full text-sm font-bold transition ${selectedYear === '2027' ? 'bg-red-700 text-white shadow' : 'bg-white text-red-700 border border-red-300'}`}
+                                    onClick={() => setSelectedYear('2027')}
+                                >
+                                    2027 羊年
+                                </button>
+                            </div>
+
                             <div className="p-4 border-b border-gray-200 bg-gray-50 shrink-0">
                                 <div className="space-y-3">
                                     <div className="flex gap-2">
@@ -975,6 +1018,10 @@
                                 </div>
                             </div>
 
+                            <div className="flex-1 overflow-y-auto p-2 scrollbar-hide">
+                                {renderSidebar()}
+                            </div>
+
                             <div className="p-4 border-t border-gray-200 bg-gray-100 shrink-0 text-center">
                                 <label className="cursor-pointer block">
                                     <span className="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded text-sm block w-full transition font-medium">
@@ -982,7 +1029,9 @@
                                     </span>
                                     <input type="file" className="hidden" accept=".pdf" onChange={handleFileChange} />
                                 </label>
-                                <p className="text-[10px] text-gray-400 mt-2">請上傳「麥玲玲2027羊年YC電子書449p完整版.pdf」</p>
+                                <p className="text-[10px] text-gray-400 mt-2 font-bold text-red-600">
+                                    請上傳「{currentConfig.pdfName}」
+                                </p>
                             </div>
                         </div>
 
@@ -1001,9 +1050,9 @@
                                 <div className="flex flex-col items-center justify-center h-full text-gray-300 space-y-4">
                                     <Icon name="book-open" size={80} className="opacity-50" />
                                     <div className="text-center">
-                                        <p className="text-xl font-bold mb-2">請上傳「麥玲玲2027羊年YC電子書449p完整版.pdf」</p>
+                                        <p className="text-xl font-bold mb-2">請上傳該年份的運程書 PDF</p>
                                         <p className="text-sm opacity-70">
-                                            上傳後，點擊左側目錄即可自動翻到對應頁面<br/>
+                                            當前選擇：{currentConfig.yearTitle}<br/>
                                             (支援 Chrome / Safari / Edge / Firefox)
                                         </p>
                                     </div>
