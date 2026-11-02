@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>麥玲玲運程書 - 動態互動 PDF 生成器 (2026/2027)</title>
+    <title>麥玲玲運程書 - 專屬電子書生成系統 (2026/2027)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -47,7 +47,11 @@
             'x': <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
             'layers': <g><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></g>,
             'calendar': <g><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></g>,
-            'download': <g><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></g>
+            'moon': <g><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></g>,
+            'sun': <g><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></g>,
+            'globe': <g><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></g>,
+            'download': <g><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></g>,
+            'menu': <g><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></g>
         };
 
         const Icon = ({ name, size = 20, className = "" }) => (
@@ -269,27 +273,81 @@
 
             const totalPages = pagesToPrint.reduce((acc, val) => acc + val.pages.length, 0);
 
+            // 輔助函數：創建隱藏的封面以供擷取，避免「Invalid element provided」
+            const createHiddenCoverForExport = () => {
+                const coverContainer = document.createElement('div');
+                coverContainer.id = 'hidden-cover-for-export';
+                coverContainer.style.position = 'fixed';
+                coverContainer.style.top = '-9999px';
+                coverContainer.style.left = '-9999px';
+                coverContainer.style.width = '794px';
+                coverContainer.style.backgroundColor = '#fdfbf7';
+                coverContainer.style.padding = '40px 60px';
+                
+                const tableRows = pagesToPrint.map((ch, idx) => {
+                    const pageText = ch.pages.length > 1 ? `P.${ch.pages[0]} - ${ch.pages[ch.pages.length - 1]}` : `P.${ch.pages[0]}`;
+                    const bgClass = idx % 2 === 0 ? 'background-color: #ffffff;' : 'background-color: #f9fafb;';
+                    // 加入一個特定的 class 讓我們稍後可以計算點擊區域
+                    return `<tr class="toc-link-row" style="${bgClass} border-bottom: 1px solid #e5e7eb; cursor: pointer;">
+                        <td style="padding: 12px; color: #1f2937; font-size: 16px;">${ch.title}</td>
+                        <td style="padding: 12px; text-align: center; font-weight: bold; color: #b91c1c; font-size: 16px;">${pageText}</td>
+                    </tr>`;
+                }).join('');
+
+                coverContainer.innerHTML = `
+                    <div style="border-bottom: 4px solid #991b1b; padding-bottom: 16px; margin-bottom: 32px;">
+                        <h1 style="font-size: 36px; font-weight: bold; color: #7f1d1d; margin: 0;">${currentConfig.yearTitle} 專屬運程手冊</h1>
+                        <p style="color: #6b7280; font-size: 18px; margin-top: 8px;">麥玲玲原版授權內容 • 個人命盤與重點導讀</p>
+                    </div>
+                    <div style="margin-bottom: 40px;">
+                        <h3 style="font-size: 20px; font-weight: bold; color: white; background-color: #991b1b; padding: 8px 16px; display: inline-block; border-radius: 8px 8px 0 0; margin: 0;">01. 您的八字命盤</h3>
+                        <div style="border: 2px solid #991b1b; padding: 24px; border-radius: 0 8px 8px 8px; background-color: #fef2f2;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                                <div><p style="color: #6b7280; margin: 0 0 4px 0; font-size: 14px;">姓名 / 性別</p><p style="font-size: 24px; font-weight: bold; color: #111827; margin: 0;">${inputData.name || '使用者'} (${inputData.gender === 'M' ? '男' : '女'})</p></div>
+                                <div><p style="color: #6b7280; margin: 0 0 4px 0; font-size: 14px;">西曆出生</p><p style="font-size: 24px; font-weight: bold; color: #111827; margin: 0;">${inputData.year}年${inputData.month}月${inputData.day}日</p></div>
+                                <div><p style="color: #6b7280; margin: 0 0 4px 0; font-size: 14px;">所屬生肖</p><p style="font-size: 36px; font-weight: bold; color: #b91c1c; margin: 0;">${userDestiny.zodiac}</p></div>
+                                <div><p style="color: #6b7280; margin: 0 0 4px 0; font-size: 14px;">出生日柱</p><p style="font-size: 36px; font-weight: bold; color: #6b21a8; margin: 0;">${userDestiny.dayPillar}</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 20px; font-weight: bold; color: white; background-color: #991b1b; padding: 8px 16px; display: inline-block; border-radius: 8px 8px 0 0; margin: 0;">02. 專屬內容索引 (點擊下方表格跳轉)</h3>
+                        <div style="border: 2px solid #d1d5db; border-radius: 0 8px 8px 8px; overflow: hidden;">
+                            <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                                <thead style="background-color: #f3f4f6; color: #374151;">
+                                    <tr><th style="padding: 12px; border-bottom: 1px solid #d1d5db;">收錄主題</th><th style="padding: 12px; border-bottom: 1px solid #d1d5db; text-align: center;">原書頁碼</th></tr>
+                                </thead>
+                                <tbody>${tableRows}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(coverContainer);
+                return coverContainer;
+            };
+
             const handleExportNativePDF = async () => {
                 if (!rawPdfBytes) { alert("找不到原始電子書檔案，請重新上傳。"); return; }
                 
                 try {
-                    const { PDFDocument, rgb } = window.PDFLib;
+                    const { PDFDocument, rgb, PDFName } = window.PDFLib;
                     
                     setExportStatus('正在生成報告封面...');
                     await new Promise(resolve => setTimeout(resolve, 100)); // 讓 React 渲染 UI
 
                     // 1. 抓取封面截圖
-                    const coverElement = document.getElementById('report-cover-section');
-                    const originalTransform = coverElement.style.transform;
-                    coverElement.style.transform = "none"; 
-                    
+                    const coverElement = createHiddenCoverForExport();
                     const canvas = await html2canvas(coverElement, { 
-                        scale: 2, useCORS: true, backgroundColor: "#ffffff", windowWidth: 800 
+                        scale: 2, useCORS: true, backgroundColor: "#ffffff"
                     });
                     const coverImageBytes = canvas.toDataURL('image/jpeg', 0.95);
-                    coverElement.style.transform = originalTransform;
 
                     const newPdf = await PDFDocument.create();
+                    
+                    // 設定 PDF 開啟時自動縮放至適合寬度 (Fit)
+                    newPdf.catalog.set(PDFName.of('OpenAction'), newPdf.context.obj([
+                        null, PDFName.of('Fit')
+                    ]));
                     
                     // 2. 畫上封面
                     const coverImage = await newPdf.embedJpg(coverImageBytes);
@@ -361,10 +419,10 @@
                             
                             // 頂部標題文字
                             const titleStr = `【 ${info.title} 】   原書 P.${info.originalPageNum}`;
-                            const titleData = createTextCanvas(titleStr, 24, '#ffffff', true);
+                            const titleData = createTextCanvas(titleStr, 22, '#ffffff', true);
                             const titleImg = await newPdf.embedPng(titleData);
                             
-                            const titleScale = 0.65;
+                            const titleScale = 0.7;
                             page.drawImage(titleImg, { 
                                 x: margin + 15, 
                                 y: a4Height - margin - topBarHeight + ((topBarHeight - titleImg.height * titleScale) / 2), 
@@ -372,7 +430,7 @@
                                 height: titleImg.height * titleScale 
                             });
 
-                            // --- 互動功能：繪製「回到主目錄」按鈕並加上連結 ---
+                            // --- 互動功能 1：繪製「回到主目錄」按鈕並加上連結 ---
                             const homeBtnData = createTextCanvas("🏠 回到主目錄", 18, '#ffffff', true, '#b91c1c');
                             const homeBtnImg = await newPdf.embedPng(homeBtnData);
                             const btnW = homeBtnImg.width * 0.65;
@@ -385,31 +443,46 @@
                             createPdfLinkAnnot(newPdf, page, coverPage, [btnX, btnY, btnX + btnW, btnY + btnH]);
 
 
-                            // --- 底部 Footer 與進度條 ---
-                            const bottomBarHeight = 35;
-                            page.drawRectangle({ 
-                                x: margin, y: margin, 
-                                width: a4Width - margin * 2, height: bottomBarHeight, 
-                                color: rgb(0.9, 0.9, 0.9) 
-                            });
+                            // --- 底部 Footer 與翻頁按鈕 ---
+                            const bottomBarHeight = 45;
+                            
+                            // 繪製「上一頁 / 下一頁」按鈕 (視覺)
+                            const prevStr = "◀ 上一頁";
+                            const nextStr = "下一頁 ▶";
+                            const prevData = createTextCanvas(prevStr, 18, '#7f1d1d', true, '#fee2e2');
+                            const nextData = createTextCanvas(nextStr, 18, '#7f1d1d', true, '#fee2e2');
+                            const prevImg = await newPdf.embedPng(prevData);
+                            const nextImg = await newPdf.embedPng(nextData);
+                            
+                            const navBtnW = prevImg.width * 0.65;
+                            const navBtnH = prevImg.height * 0.65;
+                            const prevX = margin;
+                            const nextX = a4Width - margin - navBtnW;
+                            const navY = margin + ((bottomBarHeight - navBtnH) / 2);
 
-                            // 底部進度條 (紅線)
-                            const progressWidth = ((a4Width - margin * 2) * info.globalIndex) / totalPages;
-                            page.drawRectangle({ 
-                                x: margin, y: margin, 
-                                width: progressWidth, height: 4, 
-                                color: rgb(0.7, 0.1, 0.1) 
-                            });
+                            // 如果不是第一頁(內容頁的第1頁)，畫上一頁按鈕並加上連結
+                            if (i > 0) {
+                                page.drawImage(prevImg, { x: prevX, y: navY, width: navBtnW, height: navBtnH });
+                                createPdfLinkAnnot(newPdf, page, addedPages[i - 1], [prevX, navY, prevX + navBtnW, navY + navBtnH]);
+                            }
+                            
+                            // 如果不是最後一頁，畫下一頁按鈕並加上連結
+                            if (i < embeddedPages.length - 1) {
+                                page.drawImage(nextImg, { x: nextX, y: navY, width: navBtnW, height: navBtnH });
+                                // 注意：此時 addedPages[i + 1] 還沒建立，所以我們稍後再統一處理下一頁的連結
+                            }
 
-                            // 底部文字
-                            const footerStr = `${currentConfig.reportTitle} • 專屬頁面 ${info.globalIndex} / ${totalPages}`;
-                            const footerData = createTextCanvas(footerStr, 18, '#555555', false);
+                            // 底部進度文字 (置中簡化)
+                            const footerStr = `專屬頁面 ${info.globalIndex} / ${totalPages}`;
+                            const footerData = createTextCanvas(footerStr, 16, '#555555', false);
                             const footerImg = await newPdf.embedPng(footerData);
+                            const footerW = footerImg.width * 0.6;
+                            const footerH = footerImg.height * 0.6;
                             page.drawImage(footerImg, { 
-                                x: a4Width - margin - (footerImg.width * 0.6) - 10, 
-                                y: margin + ((bottomBarHeight - footerImg.height * 0.6) / 2) + 2, 
-                                width: footerImg.width * 0.6, 
-                                height: footerImg.height * 0.6 
+                                x: (a4Width - footerW) / 2, 
+                                y: margin + ((bottomBarHeight - footerH) / 2) + 2, 
+                                width: footerW, 
+                                height: footerH 
                             });
 
                             // --- 繪製原書頁面 (手動計算縮放比) ---
@@ -424,11 +497,22 @@
                                 height: ep.height * scaleFactor,
                             });
                         }
+                        
+                        // 補上「下一頁」的連結 (因為剛剛迴圈中下一頁還沒生成)
+                        for (let i = 0; i < embeddedPages.length - 1; i++) {
+                            const page = addedPages[i];
+                            const targetPage = addedPages[i + 1];
+                            const navBtnH = 25; // 大約高度
+                            const navBtnW = 75; // 大約寬度
+                            const nextX = a4Width - margin - navBtnW;
+                            const navY = margin + ((bottomBarHeight - navBtnH) / 2);
+                            createPdfLinkAnnot(newPdf, page, targetPage, [nextX, navY, nextX + navBtnW, navY + navBtnH]);
+                        }
                     }
 
-                    // 5. 互動功能：為封面的「目錄索引表」加上點擊跳轉連結
+                    // 5. 互動功能 2：為封面的「目錄索引表」加上點擊跳轉連結
                     setExportStatus('正在建立目錄交互連結...');
-                    const tocRows = document.querySelectorAll('.toc-link-row');
+                    const tocRows = coverElement.querySelectorAll('.toc-link-row');
                     const coverRect = coverElement.getBoundingClientRect();
                     // 計算 HTML 尺寸與 PDF 尺寸的比例
                     const scaleX = coverDims.width / coverElement.offsetWidth;
@@ -475,6 +559,8 @@
                     alert("匯出 PDF 時發生錯誤。請嘗試取消勾選長篇幅章節。");
                 } finally { 
                     setExportStatus(''); 
+                    const hiddenCover = document.getElementById('hidden-cover-for-export');
+                    if (hiddenCover && hiddenCover.parentNode) hiddenCover.parentNode.removeChild(hiddenCover);
                 }
             };
 
@@ -485,7 +571,7 @@
                         <div className="bg-white p-4 border-b flex justify-between items-center z-10 shrink-0 shadow-sm">
                             <div>
                                 <h2 className="text-xl font-bold text-red-800 flex items-center gap-2"><Icon name="layers" size={24} />專屬動態互動 PDF 引擎</h2>
-                                <p className="text-sm text-gray-500 mt-1">匯出後，在 PDF 閱讀器中點擊封面目錄即可跳轉，每頁均有「回到主目錄」按鈕。</p>
+                                <p className="text-sm text-gray-500 mt-1">匯出後，在 PDF 閱讀器中點擊封面目錄即可跳轉，每頁均有「回到主目錄」與「翻頁」按鈕。</p>
                             </div>
                             <div className="flex gap-2">
                                 <button onClick={onClose} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded transition font-bold flex items-center gap-2"><Icon name="x" size={18} /> 關閉</button>
@@ -508,8 +594,8 @@
                         </div>
 
                         <div className="flex-1 overflow-y-auto p-8 bg-gray-300 flex flex-col items-center">
-                            {/* 給 html2canvas 截圖的封面 */}
-                            <div id="report-cover-section" className="bg-white shadow-xl mb-8 border border-gray-200" style={{ width: '794px', minHeight: '1123px', padding: '50px 70px' }}>
+                            {/* 給 html2canvas 截圖用的預覽封面 */}
+                            <div className="bg-white shadow-xl mb-8 border border-gray-200" style={{ width: '794px', minHeight: '1123px', padding: '50px 70px' }}>
                                 <div className="border-b-4 border-red-800 pb-6 mb-10 flex justify-between items-end">
                                     <div>
                                         <h1 className="text-5xl font-bold text-red-900 leading-tight">{currentConfig.yearTitle}<br/>專屬互動運程書</h1>
@@ -544,7 +630,7 @@
                                                 {pagesToPrint.map((item, idx) => {
                                                     const pageText = item.pages.length > 1 ? `P.${item.pages[0]} - ${item.pages[item.pages.length - 1]}` : `P.${item.pages[0]}`;
                                                     return (
-                                                        <tr key={idx} className={`toc-link-row ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-red-50 cursor-pointer transition`}>
+                                                        <tr key={idx} className={`${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                                                             <td className="p-4 border-b border-gray-200 font-medium text-gray-800">{item.title}</td>
                                                             <td className="p-4 border-b border-gray-200 text-center font-bold text-red-700">{pageText}</td>
                                                         </tr>
@@ -557,7 +643,7 @@
                                 <section>
                                     <h3 className="text-2xl font-bold text-white bg-gray-600 px-6 py-2 inline-block rounded-t-xl">03. 閱讀指引</h3>
                                     <div className="border-2 border-gray-300 p-8 rounded-b-xl rounded-tr-xl text-gray-700 leading-relaxed space-y-5 text-lg">
-                                        <p><strong>★ 關於跳轉：</strong>這是一份互動 PDF，點擊上方的目錄即可跳轉至該章節，在任何章節右上角點擊「🏠 回到主目錄」即可返回此頁。</p>
+                                        <p><strong>★ 關於跳轉：</strong>這是一份互動 PDF，點擊上方的目錄即可跳轉至該章節，在任何章節點擊「回到主目錄」即可返回此頁。</p>
                                         <p><strong>★ 關於日柱：</strong>除了大環境的生肖運勢，您的「日柱」代表個人（日元）及夫妻宮，能更精細地反映個人流年際遇與深層運勢變化，請優先詳讀。</p>
                                         {userDestiny.fanTaiSui && (
                                             <p className="text-red-800 bg-red-50 p-5 rounded border border-red-200">
@@ -813,11 +899,13 @@
                 const zodiacInfo = currentConfig.ZODIAC_DATA[userDestiny.zodiac];
                 if (!zodiacInfo) return <div className="p-4 bg-red-100 text-red-800 text-sm">錯誤：找不到生肖數據。</div>;
 
+                const birthYearPage = zodiacInfo?.years[parseInt(inputData.year)];
+
                 return (
                     <div className="space-y-6 pb-20">
                         <div className="bg-white p-4 shadow-sm border-b sticky top-0 z-10 flex flex-col gap-3">
                             <button onClick={() => setShowReport(true)} className="w-full bg-red-700 hover:bg-red-800 text-white py-2.5 rounded shadow-sm flex items-center justify-center gap-2 transition font-bold text-sm">
-                                <Icon name="layers" size={18} /> 📥 匯出動態互動 PDF
+                                <Icon name="layers" size={18} /> 📥 匯出互動電子書 PDF
                             </button>
                             <button onClick={handleExportICS} className="w-full bg-gray-800 hover:bg-gray-900 text-white py-2.5 rounded shadow-sm flex items-center justify-center gap-2 transition font-bold text-sm">
                                 <Icon name="calendar" size={18} /> 📅 匯出運程至日曆 (Mac/iPhone)
