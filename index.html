@@ -227,16 +227,70 @@
                 }
             });
 
+            // 輔助函數：創建隱藏的封面以供擷取，避免「Invalid element provided」
+            const createHiddenCoverForExport = () => {
+                const coverContainer = document.createElement('div');
+                coverContainer.id = 'hidden-cover-for-export';
+                coverContainer.style.position = 'fixed';
+                coverContainer.style.top = '-9999px';
+                coverContainer.style.left = '-9999px';
+                coverContainer.style.width = '794px';
+                coverContainer.style.backgroundColor = '#fdfbf7';
+                coverContainer.style.padding = '40px 60px';
+                
+                const tableRows = chapters.map((ch, idx) => {
+                    const pageText = ch.pages.length > 1 ? `P.${ch.pages[0]} - ${ch.pages[ch.pages.length - 1]}` : `P.${ch.pages[0]}`;
+                    const bgClass = idx % 2 === 0 ? 'background-color: #ffffff;' : 'background-color: #f9fafb;';
+                    return `<tr style="${bgClass} border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 12px; color: #1f2937;">${ch.title}</td>
+                        <td style="padding: 12px; text-align: center; font-weight: bold; color: #b91c1c;">${pageText}</td>
+                    </tr>`;
+                }).join('');
+
+                coverContainer.innerHTML = `
+                    <div style="border-bottom: 4px solid #991b1b; padding-bottom: 16px; margin-bottom: 32px;">
+                        <h1 style="font-size: 36px; font-weight: bold; color: #7f1d1d; margin: 0;">${currentConfig.yearTitle} 專屬運程手冊</h1>
+                        <p style="color: #6b7280; font-size: 18px; margin-top: 8px;">麥玲玲原版授權內容 • 個人命盤與重點導讀</p>
+                    </div>
+                    <div style="margin-bottom: 40px;">
+                        <h3 style="font-size: 20px; font-weight: bold; color: white; background-color: #991b1b; padding: 8px 16px; display: inline-block; border-radius: 8px 8px 0 0; margin: 0;">01. 您的八字命盤</h3>
+                        <div style="border: 2px solid #991b1b; padding: 24px; border-radius: 0 8px 8px 8px; background-color: #fef2f2;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                                <div><p style="color: #6b7280; margin: 0 0 4px 0; font-size: 14px;">姓名 / 性別</p><p style="font-size: 24px; font-weight: bold; color: #111827; margin: 0;">${inputData.name || '使用者'} (${inputData.gender === 'M' ? '男' : '女'})</p></div>
+                                <div><p style="color: #6b7280; margin: 0 0 4px 0; font-size: 14px;">西曆出生</p><p style="font-size: 24px; font-weight: bold; color: #111827; margin: 0;">${inputData.year}年${inputData.month}月${inputData.day}日</p></div>
+                                <div><p style="color: #6b7280; margin: 0 0 4px 0; font-size: 14px;">所屬生肖</p><p style="font-size: 36px; font-weight: bold; color: #b91c1c; margin: 0;">${userDestiny.zodiac}</p></div>
+                                <div><p style="color: #6b7280; margin: 0 0 4px 0; font-size: 14px;">出生日柱</p><p style="font-size: 36px; font-weight: bold; color: #6b21a8; margin: 0;">${userDestiny.dayPillar}</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 20px; font-weight: bold; color: white; background-color: #991b1b; padding: 8px 16px; display: inline-block; border-radius: 8px 8px 0 0; margin: 0;">02. 專屬內容索引</h3>
+                        <div style="border: 2px solid #d1d5db; border-radius: 0 8px 8px 8px; overflow: hidden;">
+                            <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                                <thead style="background-color: #f3f4f6; color: #374151;">
+                                    <tr><th style="padding: 12px; border-bottom: 1px solid #d1d5db;">收錄主題</th><th style="padding: 12px; border-bottom: 1px solid #d1d5db; text-align: center;">原書頁碼</th></tr>
+                                </thead>
+                                <tbody>${tableRows}</tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(coverContainer);
+                return coverContainer;
+            };
+
             // --- 匯出功能 1：原生 PDF ---
             const handleExportPDF = async () => {
                 if (!rawPdfBytes) { alert("找不到原始電子書檔案。"); return; }
                 setExportStatus('正在準備 PDF 引擎...');
                 await new Promise(r => setTimeout(r, 100));
 
+                let coverElement = null;
                 try {
                     const { PDFDocument } = window.PDFLib;
-                    const coverElement = document.getElementById('ebook-cover-content');
-                    const canvas = await html2canvas(coverElement, { scale: 2, useCORS: true, backgroundColor: "#ffffff", windowWidth: 800 });
+                    
+                    coverElement = createHiddenCoverForExport();
+                    const canvas = await html2canvas(coverElement, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
                     const coverImageBytes = canvas.toDataURL('image/jpeg', 0.95);
 
                     const newPdf = await PDFDocument.create();
@@ -273,46 +327,51 @@
                     document.body.appendChild(link); link.click(); document.body.removeChild(link);
                 } catch (error) {
                     alert("匯出 PDF 時發生錯誤，請嘗試取消勾選大篇幅章節。");
-                } finally { setExportStatus(''); }
+                } finally { 
+                    setExportStatus(''); 
+                    if (coverElement && coverElement.parentNode) coverElement.parentNode.removeChild(coverElement);
+                }
             };
 
-            // --- 匯出功能 2：獨立 HTML 電子書 (升級左側選單與防擋機制) ---
+            // --- 匯出功能 2：獨立 HTML 電子書 ---
             const handleExportHTML = async () => {
                 setExportStatus('正在擷取書本畫面，請勿關閉視窗...');
                 await new Promise(r => setTimeout(r, 100));
 
+                let coverElement = null;
                 try {
                     let base64Pages = [];
                     
                     setExportStatus('正在渲染封面...');
-                    const coverElement = document.getElementById('ebook-cover-content');
-                    const coverCanvas = await html2canvas(coverElement, { scale: 1.5, backgroundColor: "#fdfbf7", windowWidth: 800 });
+                    coverElement = createHiddenCoverForExport();
+                    const coverCanvas = await html2canvas(coverElement, { scale: 1.5, backgroundColor: "#fdfbf7" });
                     base64Pages.push({ title: "命盤與導讀", img: coverCanvas.toDataURL('image/jpeg', 0.8) });
 
                     for (let i = 1; i < bookPages.length; i++) {
                         const bp = bookPages[i];
                         setExportStatus(`正在渲染第 ${i}/${bookPages.length-1} 頁...`);
-                        await new Promise(r => setTimeout(r, 10)); // 釋放線程
+                        await new Promise(r => setTimeout(r, 10)); // 釋放線程防當機
 
                         const actualPageNum = bp.pageNum + parseInt(pageOffset);
                         if (actualPageNum > 0 && actualPageNum <= pdfDoc.numPages) {
                             const page = await pdfDoc.getPage(actualPageNum);
-                            const viewport = page.getViewport({ scale: 1.2 }); // 降低縮放至1.2，大幅減小HTML檔案體積
+                            const viewport = page.getViewport({ scale: 1.2 }); 
                             const canvas = document.createElement('canvas');
                             const context = canvas.getContext('2d', { willReadFrequently: true });
                             canvas.height = viewport.height;
                             canvas.width = viewport.width;
                             await page.render({ canvasContext: context, viewport }).promise;
                             
-                            // 使用 0.65 的 JPEG 壓縮率，畫質夠用且檔案大幅縮小
                             base64Pages.push({ title: `${bp.title} (${bp.sub})`, img: canvas.toDataURL('image/jpeg', 0.65) });
+                            
+                            // 強制清理 canvas 記憶體
+                            canvas.width = 0; canvas.height = 0;
                         }
                     }
 
                     setExportStatus('正在封裝為獨立網頁...');
                     await new Promise(r => setTimeout(r, 50));
 
-                    // HTML 模板 (含 JS 防封鎖警告與左側漢堡目錄)
                     const htmlTemplate = `<!DOCTYPE html>
 <html lang="zh-HK">
 <head>
@@ -369,7 +428,6 @@
     
     <div class="viewer-container">
         <div class="viewer" id="viewerBox">
-            <!-- 預設直接載入第一張圖，防止 JS 被封鎖時畫面全白 -->
             <img id="pageImg" src="${base64Pages[0].img}" alt="載入中..." />
         </div>
         <div class="controls">
@@ -380,7 +438,6 @@
     </div>
     
     <script>
-        // 隱藏警告標語 (因為 JS 成功執行了)
         document.getElementById('js-warning').style.display = 'none';
 
         const pages = ${JSON.stringify(base64Pages)};
@@ -439,13 +496,11 @@
         function next() { if(currentIndex < pages.length - 1) { currentIndex++; render(); } }
         function jump(idx) { currentIndex = parseInt(idx); render(); }
         
-        // Initial render logic is handled by pre-injected src, just update TOC state
         updateActiveToc();
     <\/script>
 </body>
 </html>`;
 
-                    // 4. 觸發下載
                     const blob = new Blob([htmlTemplate], { type: 'text/html;charset=utf-8' });
                     const link = document.createElement('a');
                     link.href = URL.createObjectURL(blob);
@@ -457,6 +512,56 @@
                     alert("匯出 HTML 時發生錯誤，請嘗試取消勾選長篇幅章節。");
                 } finally {
                     setExportStatus('');
+                    if (coverElement && coverElement.parentNode) coverElement.parentNode.removeChild(coverElement);
+                }
+            };
+
+            const handleExportICS = () => {
+                if (!userDestiny || !window.LunarYear) return;
+                
+                let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Mak Fortune Reader//HK//\nCALSCALE:GREGORIAN\n";
+                
+                try {
+                    const lunarYear = window.LunarYear.fromYear(parseInt(selectedYear));
+                    const months = lunarYear.getMonths();
+                    
+                    months.forEach(m => {
+                        const monthNum = m.getMonth();
+                        const isLeap = monthNum < 0;
+                        const absMonth = Math.abs(monthNum);
+                        
+                        const firstDayLunar = window.Lunar.fromYmd(parseInt(selectedYear), monthNum, 1);
+                        const solar = firstDayLunar.getSolar();
+                        
+                        const startStr = `${solar.getYear()}${String(solar.getMonth()).padStart(2, '0')}${String(solar.getDay()).padStart(2, '0')}`;
+                        const nextSolar = solar.next(1);
+                        const endStr = `${nextSolar.getYear()}${String(nextSolar.getMonth()).padStart(2, '0')}${String(nextSolar.getDay()).padStart(2, '0')}`;
+                        
+                        const monthName = isLeap ? `閏${absMonth}月` : `${absMonth}月`;
+                        const summary = `[麥玲玲運程] 肖${userDestiny.zodiac} ${monthName}運勢 & ${userDestiny.dayPillar}日柱`;
+                        
+                        const description = `這是一條自動生成的運程提醒。\\n\\n【肖${userDestiny.zodiac} ${monthName}運勢】\\n請查閱電子書 P.${zodiacInfo.monthly[0]} - P.${zodiacInfo.monthly[1]}\\n\\n【您的日柱：${userDestiny.dayPillar}】\\n請查閱電子書 P.${userDestiny.pillarPage} - P.${userDestiny.pillarPage+1}\\n\\n祝您${selectedYear}年順遂平安！`;
+                        
+                        icsContent += "BEGIN:VEVENT\n";
+                        icsContent += `DTSTART;VALUE=DATE:${startStr}\n`;
+                        icsContent += `DTEND;VALUE=DATE:${endStr}\n`;
+                        icsContent += `SUMMARY:${summary}\n`;
+                        icsContent += `DESCRIPTION:${description}\n`;
+                        icsContent += "END:VEVENT\n";
+                    });
+                    
+                    icsContent += "END:VCALENDAR";
+                    
+                    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `${inputData.name || '專屬'}_${selectedYear}年每月運程日曆提醒.ics`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                } catch (err) {
+                    alert("生成日曆時發生錯誤。");
                 }
             };
 
@@ -465,7 +570,6 @@
             return (
                 <div className="fixed inset-0 bg-[#3a3d40] z-50 flex flex-col h-full overflow-hidden">
                     
-                    {/* 頂部導航列 */}
                     <div className="bg-red-900 text-white h-14 flex items-center px-4 justify-between shadow-md shrink-0 z-20">
                         <div className="flex items-center gap-3">
                             <button onClick={() => setIsTocOpen(!isTocOpen)} className="p-1 hover:bg-red-800 rounded transition">
@@ -480,7 +584,7 @@
                     </div>
 
                     <div className="flex flex-1 overflow-hidden relative">
-                        {/* 目錄側邊欄 (Drawer) */}
+                        {/* 左側選單 */}
                         <div className={`absolute inset-y-0 left-0 w-72 bg-white shadow-2xl z-30 transform transition-transform duration-300 flex flex-col ${isTocOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                             <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
                                 <h3 className="font-bold text-gray-800">📖 目錄</h3>
@@ -501,7 +605,7 @@
                                 </ul>
                             </div>
                             
-                            {/* 匯出控制面板 */}
+                            {/* 匯出面板 */}
                             <div className="p-4 border-t bg-gray-50 space-y-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                                 <div className="space-y-1 mb-2">
                                     <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-600">
@@ -512,7 +616,7 @@
                                     </label>
                                 </div>
                                 <button onClick={handleExportHTML} disabled={exportStatus !== ''} className="w-full bg-orange-600 hover:bg-orange-700 text-white py-2.5 rounded text-sm font-bold transition flex items-center justify-center gap-1 shadow disabled:opacity-50">
-                                    <Icon name="globe" size={16} /> 匯出網頁版 (推薦)
+                                    <Icon name="globe" size={16} /> 匯出網頁電子書 (推薦)
                                 </button>
                                 <button onClick={handleExportPDF} disabled={exportStatus !== ''} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded text-sm font-bold transition flex items-center justify-center gap-1 shadow disabled:opacity-50">
                                     <Icon name="download" size={16} /> 匯出 PDF
@@ -520,10 +624,9 @@
                             </div>
                         </div>
 
-                        {/* 點擊遮罩關閉目錄 */}
                         {isTocOpen && <div className="absolute inset-0 bg-black/40 z-20 transition-opacity" onClick={() => setIsTocOpen(false)}></div>}
 
-                        {/* 閱讀區主體 */}
+                        {/* 閱讀區 */}
                         <div className="flex-1 overflow-y-auto relative flex flex-col">
                             {exportStatus && (
                                 <div className="absolute inset-0 bg-white/90 z-40 flex flex-col items-center justify-center backdrop-blur-sm">
@@ -534,8 +637,7 @@
 
                             <div className="flex-1 p-2 md:p-6 pb-24">
                                 {currentPage.type === 'cover' ? (
-                                    // 封面組件
-                                    <div id="ebook-cover-content" className="bg-[#fdfbf7] shadow-xl max-w-2xl mx-auto p-8 md:p-12 border border-gray-200">
+                                    <div className="bg-[#fdfbf7] shadow-xl max-w-2xl mx-auto p-8 md:p-12 border border-gray-200">
                                         <div className="border-b-4 border-red-800 pb-4 mb-8">
                                             <h1 className="text-3xl md:text-4xl font-bold text-red-900 leading-tight">{currentConfig.yearTitle}<br/>專屬運程手冊</h1>
                                             <p className="text-gray-500 mt-2">個人命盤與重點導讀</p>
@@ -565,7 +667,6 @@
                                         </section>
                                     </div>
                                 ) : (
-                                    // PDF 單頁組件
                                     <div className="max-w-2xl mx-auto relative">
                                         <div className="absolute -top-3 left-0 bg-red-800 text-white px-3 py-1 rounded-t-md text-xs font-bold shadow-md z-10">
                                             {currentPage.title} ({currentPage.sub})
@@ -579,7 +680,6 @@
                         </div>
                     </div>
 
-                    {/* 底部導航列 (浮動) */}
                     <div className="absolute bottom-0 w-full bg-white/95 backdrop-blur border-t shadow-[0_-4px_10px_rgba(0,0,0,0.1)] p-3 flex justify-between items-center z-40">
                         <button 
                             onClick={() => setCurrentIndex(i => Math.max(0, i - 1))}
@@ -763,6 +863,52 @@
                 });
             };
 
+            const handleExportICS = () => {
+                if (!userDestiny || !window.LunarYear) return;
+                const config = YEAR_CONFIGS[selectedYear];
+                const zodiacInfo = config.ZODIAC_DATA[userDestiny.zodiac];
+                
+                let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Mak Fortune Reader//HK//\nCALSCALE:GREGORIAN\n";
+                
+                try {
+                    const lunarYear = window.LunarYear.fromYear(parseInt(selectedYear));
+                    const months = lunarYear.getMonths();
+                    
+                    months.forEach(m => {
+                        const monthNum = m.getMonth();
+                        const isLeap = monthNum < 0;
+                        const absMonth = Math.abs(monthNum);
+                        
+                        const firstDayLunar = window.Lunar.fromYmd(parseInt(selectedYear), monthNum, 1);
+                        const solar = firstDayLunar.getSolar();
+                        
+                        const startStr = `${solar.getYear()}${String(solar.getMonth()).padStart(2, '0')}${String(solar.getDay()).padStart(2, '0')}`;
+                        const nextSolar = solar.next(1);
+                        const endStr = `${nextSolar.getYear()}${String(nextSolar.getMonth()).padStart(2, '0')}${String(nextSolar.getDay()).padStart(2, '0')}`;
+                        
+                        const monthName = isLeap ? `閏${absMonth}月` : `${absMonth}月`;
+                        const summary = `[麥玲玲運程] 肖${userDestiny.zodiac} ${monthName}運勢 & ${userDestiny.dayPillar}日柱`;
+                        
+                        const description = `這是一條自動生成的運程提醒。\\n\\n【肖${userDestiny.zodiac} ${monthName}運勢】\\n請查閱電子書 P.${zodiacInfo.monthly[0]} - P.${zodiacInfo.monthly[1]}\\n\\n【您的日柱：${userDestiny.dayPillar}】\\n請查閱電子書 P.${userDestiny.pillarPage} - P.${userDestiny.pillarPage+1}\\n\\n祝您${selectedYear}年順遂平安！`;
+                        
+                        icsContent += "BEGIN:VEVENT\n";
+                        icsContent += `DTSTART;VALUE=DATE:${startStr}\n`;
+                        icsContent += `DTEND;VALUE=DATE:${endStr}\n`;
+                        icsContent += `SUMMARY:${summary}\n`;
+                        icsContent += `DESCRIPTION:${description}\n`;
+                        icsContent += "END:VEVENT\n";
+                    });
+                    
+                    icsContent += "END:VCALENDAR";
+                    
+                    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `${inputData.name || '專屬'}_${selectedYear}年每月運程日曆提醒.ics`;
+                    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                } catch (err) { alert("生成日曆時發生錯誤。"); }
+            };
+
             const goToPage = (targetPage) => {
                 let finalPage = targetPage + parseInt(pageOffset || 0);
                 if (finalPage < 1) finalPage = 1;
@@ -777,13 +923,14 @@
                 const zodiacInfo = currentConfig.ZODIAC_DATA[userDestiny.zodiac];
                 if (!zodiacInfo) return <div className="p-4 bg-red-100 text-red-800 text-sm">錯誤：找不到生肖數據。</div>;
 
-                const birthYearPage = zodiacInfo?.years[parseInt(inputData.year)];
-
                 return (
                     <div className="space-y-6 pb-20">
                         <div className="bg-white p-4 shadow-sm border-b sticky top-0 z-10 flex flex-col gap-3">
                             <button onClick={() => setShowReport(true)} className="w-full bg-red-700 hover:bg-red-800 text-white py-2.5 rounded shadow-sm flex items-center justify-center gap-2 transition font-bold text-sm">
                                 <Icon name="layers" size={18} /> 📖 開啟專屬電子書模式
+                            </button>
+                            <button onClick={handleExportICS} className="w-full bg-gray-800 hover:bg-gray-900 text-white py-2.5 rounded shadow-sm flex items-center justify-center gap-2 transition font-bold text-sm">
+                                <Icon name="calendar" size={18} /> 📅 匯出運程至日曆 (Mac/iPhone)
                             </button>
                         </div>
 
