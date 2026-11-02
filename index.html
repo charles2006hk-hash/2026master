@@ -47,9 +47,6 @@
             'x': <g><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>,
             'layers': <g><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></g>,
             'calendar': <g><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></g>,
-            'moon': <g><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></g>,
-            'sun': <g><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></g>,
-            'globe': <g><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></g>,
             'download': <g><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></g>,
             'menu': <g><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></g>
         };
@@ -168,7 +165,6 @@
         // --- 核心：寫入 PDF 連結的輔助函數 ---
         const createPdfLinkAnnot = (pdfDoc, page, targetPage, rect) => {
             const { PDFName, PDFArray } = window.PDFLib;
-            // 建立 Link Annotation 的字典
             const linkDict = pdfDoc.context.obj({
                 Type: 'Annot',
                 Subtype: 'Link',
@@ -189,7 +185,6 @@
             annots.push(linkDict);
         };
 
-        // --- 單頁預覽組件 ---
         const PdfPagePreview = ({ pdfDoc, pageNum, pageOffset, scale = 1.2, title }) => {
             const canvasRef = useRef(null);
             const [status, setStatus] = useState('loading'); 
@@ -236,7 +231,6 @@
             );
         };
 
-        // --- 報告模態框 (原生 PDF 匯出引擎 4.0 - 帶動態互動連結) ---
         const ReportModal = ({ userDestiny, inputData, pdfDoc, rawPdfBytes, pageOffset, currentConfig, selectedYear, onClose }) => {
             const [exportStatus, setExportStatus] = useState('');
             const [includeWorldTrend, setIncludeWorldTrend] = useState(false);
@@ -396,6 +390,29 @@
                         const copiedPages = await newPdf.copyPages(originalPdf, indices);
                         const embeddedPages = await newPdf.embedPages(copiedPages);
 
+                        // 將版面常數提取到外層，避免在補上連結時出錯
+                        const margin = 20;
+                        const topBarHeight = 50;
+                        const bottomBarHeight = 45;
+
+                        // 預先生成共用按鈕圖層 (大幅提升效能)
+                        const homeBtnData = createTextCanvas("🏠 回到主目錄", 18, '#ffffff', true, '#b91c1c');
+                        const homeBtnImg = await newPdf.embedPng(homeBtnData);
+                        const homeBtnW = homeBtnImg.width * 0.65;
+                        const homeBtnH = homeBtnImg.height * 0.65;
+                        const homeBtnX = a4Width - margin - homeBtnW - 10;
+                        const homeBtnY = a4Height - margin - topBarHeight + ((topBarHeight - homeBtnH) / 2);
+
+                        const prevData = createTextCanvas("◀ 上一頁", 18, '#7f1d1d', true, '#fee2e2');
+                        const nextData = createTextCanvas("下一頁 ▶", 18, '#7f1d1d', true, '#fee2e2');
+                        const prevImg = await newPdf.embedPng(prevData);
+                        const nextImg = await newPdf.embedPng(nextData);
+                        const navBtnW = prevImg.width * 0.65;
+                        const navBtnH = prevImg.height * 0.65;
+                        const prevX = margin;
+                        const nextX = a4Width - margin - navBtnW;
+                        const navY = margin + ((bottomBarHeight - navBtnH) / 2);
+
                         for (let i = 0; i < embeddedPages.length; i++) {
                             setExportStatus(`正在合成主題頁面 (${i + 1}/${totalPages})...`);
                             await new Promise(resolve => setTimeout(resolve, 10)); // 釋放主線程防當機
@@ -409,8 +426,6 @@
                             page.drawRectangle({ x: 0, y: 0, width: a4Width, height: a4Height, color: rgb(0.99, 0.98, 0.96) });
                             
                             // --- 頂部 Header 框架 ---
-                            const topBarHeight = 50;
-                            const margin = 20;
                             page.drawRectangle({ 
                                 x: margin, y: a4Height - margin - topBarHeight, 
                                 width: a4Width - margin * 2, height: topBarHeight, 
@@ -431,48 +446,25 @@
                             });
 
                             // --- 互動功能 1：繪製「回到主目錄」按鈕並加上連結 ---
-                            const homeBtnData = createTextCanvas("🏠 回到主目錄", 18, '#ffffff', true, '#b91c1c');
-                            const homeBtnImg = await newPdf.embedPng(homeBtnData);
-                            const btnW = homeBtnImg.width * 0.65;
-                            const btnH = homeBtnImg.height * 0.65;
-                            const btnX = a4Width - margin - btnW - 10;
-                            const btnY = a4Height - margin - topBarHeight + ((topBarHeight - btnH) / 2);
-                            
-                            page.drawImage(homeBtnImg, { x: btnX, y: btnY, width: btnW, height: btnH });
-                            // 加上隱藏連結指向 Cover Page (第一頁)
-                            createPdfLinkAnnot(newPdf, page, coverPage, [btnX, btnY, btnX + btnW, btnY + btnH]);
+                            page.drawImage(homeBtnImg, { x: homeBtnX, y: homeBtnY, width: homeBtnW, height: homeBtnH });
+                            createPdfLinkAnnot(newPdf, page, coverPage, [homeBtnX, homeBtnY, homeBtnX + homeBtnW, homeBtnY + homeBtnH]);
 
+                            // --- 底部 Footer 與進度條 ---
+                            page.drawRectangle({ 
+                                x: margin, y: margin, 
+                                width: a4Width - margin * 2, height: bottomBarHeight, 
+                                color: rgb(0.9, 0.9, 0.9) 
+                            });
 
-                            // --- 底部 Footer 與翻頁按鈕 ---
-                            const bottomBarHeight = 45;
-                            
-                            // 繪製「上一頁 / 下一頁」按鈕 (視覺)
-                            const prevStr = "◀ 上一頁";
-                            const nextStr = "下一頁 ▶";
-                            const prevData = createTextCanvas(prevStr, 18, '#7f1d1d', true, '#fee2e2');
-                            const nextData = createTextCanvas(nextStr, 18, '#7f1d1d', true, '#fee2e2');
-                            const prevImg = await newPdf.embedPng(prevData);
-                            const nextImg = await newPdf.embedPng(nextData);
-                            
-                            const navBtnW = prevImg.width * 0.65;
-                            const navBtnH = prevImg.height * 0.65;
-                            const prevX = margin;
-                            const nextX = a4Width - margin - navBtnW;
-                            const navY = margin + ((bottomBarHeight - navBtnH) / 2);
+                            // 底部進度條 (紅線)
+                            const progressWidth = ((a4Width - margin * 2) * info.globalIndex) / totalPages;
+                            page.drawRectangle({ 
+                                x: margin, y: margin, 
+                                width: progressWidth, height: 4, 
+                                color: rgb(0.7, 0.1, 0.1) 
+                            });
 
-                            // 如果不是第一頁(內容頁的第1頁)，畫上一頁按鈕並加上連結
-                            if (i > 0) {
-                                page.drawImage(prevImg, { x: prevX, y: navY, width: navBtnW, height: navBtnH });
-                                createPdfLinkAnnot(newPdf, page, addedPages[i - 1], [prevX, navY, prevX + navBtnW, navY + navBtnH]);
-                            }
-                            
-                            // 如果不是最後一頁，畫下一頁按鈕並加上連結
-                            if (i < embeddedPages.length - 1) {
-                                page.drawImage(nextImg, { x: nextX, y: navY, width: navBtnW, height: navBtnH });
-                                // 注意：此時 addedPages[i + 1] 還沒建立，所以我們稍後再統一處理下一頁的連結
-                            }
-
-                            // 底部進度文字 (置中簡化)
+                            // 底部文字 (簡化)
                             const footerStr = `專屬頁面 ${info.globalIndex} / ${totalPages}`;
                             const footerData = createTextCanvas(footerStr, 16, '#555555', false);
                             const footerImg = await newPdf.embedPng(footerData);
@@ -484,6 +476,17 @@
                                 width: footerW, 
                                 height: footerH 
                             });
+
+                            // 繪製「上一頁」按鈕 (視覺) + 綁定互動事件
+                            if (i > 0) {
+                                page.drawImage(prevImg, { x: prevX, y: navY, width: navBtnW, height: navBtnH });
+                                createPdfLinkAnnot(newPdf, page, addedPages[i - 1], [prevX, navY, prevX + navBtnW, navY + navBtnH]);
+                            }
+                            
+                            // 繪製「下一頁」按鈕 (視覺，連結在迴圈外補上)
+                            if (i < embeddedPages.length - 1) {
+                                page.drawImage(nextImg, { x: nextX, y: navY, width: navBtnW, height: navBtnH });
+                            }
 
                             // --- 繪製原書頁面 (手動計算縮放比) ---
                             const contentWidth = a4Width - margin * 2;
@@ -502,10 +505,6 @@
                         for (let i = 0; i < embeddedPages.length - 1; i++) {
                             const page = addedPages[i];
                             const targetPage = addedPages[i + 1];
-                            const navBtnH = 25; // 大約高度
-                            const navBtnW = 75; // 大約寬度
-                            const nextX = a4Width - margin - navBtnW;
-                            const navY = margin + ((bottomBarHeight - navBtnH) / 2);
                             createPdfLinkAnnot(newPdf, page, targetPage, [nextX, navY, nextX + navBtnW, navY + navBtnH]);
                         }
                     }
@@ -899,13 +898,11 @@
                 const zodiacInfo = currentConfig.ZODIAC_DATA[userDestiny.zodiac];
                 if (!zodiacInfo) return <div className="p-4 bg-red-100 text-red-800 text-sm">錯誤：找不到生肖數據。</div>;
 
-                const birthYearPage = zodiacInfo?.years[parseInt(inputData.year)];
-
                 return (
                     <div className="space-y-6 pb-20">
                         <div className="bg-white p-4 shadow-sm border-b sticky top-0 z-10 flex flex-col gap-3">
                             <button onClick={() => setShowReport(true)} className="w-full bg-red-700 hover:bg-red-800 text-white py-2.5 rounded shadow-sm flex items-center justify-center gap-2 transition font-bold text-sm">
-                                <Icon name="layers" size={18} /> 📥 匯出互動電子書 PDF
+                                <Icon name="layers" size={18} /> 📥 匯出動態互動 PDF
                             </button>
                             <button onClick={handleExportICS} className="w-full bg-gray-800 hover:bg-gray-900 text-white py-2.5 rounded shadow-sm flex items-center justify-center gap-2 transition font-bold text-sm">
                                 <Icon name="calendar" size={18} /> 📅 匯出運程至日曆 (Mac/iPhone)
